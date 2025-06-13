@@ -1,3 +1,8 @@
+.cursor-server
+.viminfo
+.windsurf-server
+*.swp
+
 .eggs
 *.egg-info
 build
