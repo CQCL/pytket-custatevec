@@ -18,16 +18,16 @@ from typing import Literal
 
 import cupy as cp  # type: ignore
 import cuquantum.custatevec as cusv  # type: ignore
-from apply import apply_matrix, apply_pauli_rotation, pytket_paulis_to_custatevec_paulis
-from cuquantum import cudaDataType
+from .apply import apply_matrix, apply_pauli_rotation, pytket_paulis_to_custatevec_paulis
+from cuquantum.bindings._utils import cudaDataType
 from cuquantum.bindings.custatevec import StateVectorType
-from dtype import cuquantum_to_np_dtype
-from gate_definitions import get_gate_matrix, get_uncontrolled_gate
-from handle import CuStateVecHandle
-from logger import set_logger
-from statevector import CuStateVector
+from .dtype import cuquantum_to_np_dtype
+from .gate_definitions import get_gate_matrix, get_uncontrolled_gate
+from .handle import CuStateVecHandle
+from .logger import set_logger
+from .statevector import CuStateVector
 from sympy import Expr
-from utils import _remove_meas_and_implicit_swaps
+from .utils import _remove_meas_and_implicit_swaps
 
 from pytket.circuit import Bit, Circuit, OpType, PauliExpBox, Qubit
 

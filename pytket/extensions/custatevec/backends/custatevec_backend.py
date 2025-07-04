@@ -18,7 +18,7 @@ from abc import abstractmethod
 from typing import List, Optional, Sequence, Union
 from uuid import uuid4
 
-from cuquantum import cudaDataType
+from cuquantum.bindings._utils import cudaDataType
 
 from pytket._tket.circuit import Circuit, OpType
 from pytket.backends.backend import Backend

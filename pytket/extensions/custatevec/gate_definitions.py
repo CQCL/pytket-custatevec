@@ -3,6 +3,7 @@ from typing import Sequence, Any
 
 import numpy as np
 from numpy.typing import DTypeLike, NDArray
+from cuquantum.bindings._utils import cudaDataType
 
 try:
     import cupy as cp  # type: ignore
@@ -15,7 +16,7 @@ from pytket.extensions.custatevec.gate_classes import (
     CuStateVecMatrix,
 )
 
-from dtype import cuquantum_to_np_dtype
+from .dtype import cuquantum_to_np_dtype
 
 _I = np.eye(2)
 
