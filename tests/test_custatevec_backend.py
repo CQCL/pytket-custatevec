@@ -1,29 +1,38 @@
-from typing import Any
+# from typing import Any
 
 import numpy as np
 import pytest
 
-from pytket.circuit import (  # type: ignore
-    BasisOrder,
+from pytket.circuit import (
     Circuit,
-    DummyBox,
-    OpType,
-    ToffoliBox,
 )
 from pytket.extensions.custatevec.backends import CuStateVecStateBackend
-from pytket.passes import CliffordSimp  # type: ignore
+from pytket.extensions.qiskit import AerStateBackend
+
+# from pytket.passes import CliffordSimp  # type: ignore
 
 
 def test_bell() -> None:
     c = Circuit(2)
     c.H(0)
-    # c.CX(0, 1)
-    b = CuStateVecStateBackend()
-    h = b.process_circuits([c])
-    # assert np.allclose(
-    #     b.get_result(h).get_state(), np.asarray([1, 0, 0, 1]) * 1 / np.sqrt(2),
-    # )
+    c.CX(0, 1)
+    cu_backend = CuStateVecStateBackend()
+    aer_backend = AerStateBackend()
+    aer_handle = aer_backend.process_circuit(c)
+    cu_handle = cu_backend.process_circuits([c])
+    aer_result = aer_backend.get_result(aer_handle).get_state()
+    cu_result = cu_backend.get_result(cu_handle[0]).get_state().array
+    print(aer_result)
+    print(cu_result)
+    assert np.allclose(
+        cu_result,
+        np.asarray([1, 0, 0, 1]) * 1 / np.sqrt(2),
+    )
 
+# def compare_with_AerStateBackend():
+    # backend = AerStateBackend()
+    # handle = backend.process_circuit(circ)
+    # print(backend.get_result(handle))
 
 # def test_sampler_bell() -> None:
 #     n_shots = 100000

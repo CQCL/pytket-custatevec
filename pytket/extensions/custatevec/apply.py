@@ -40,11 +40,17 @@ def apply_matrix(
             [control_bit_values] if control_bit_values is int else control_bit_values
         )
 
+    # Note: cuStateVec expects the matrix to act only on the target qubits.
+    # For example, even in a multi-qubit system (e.g., 2 qubits),
+    # applying a single-qubit gate like X only requires a 2x2 matrix.
+    # cuStateVec internally handles embedding it into the full system
+    # based on the specified target qubit(s).
+
     cusv.apply_matrix(
         handle=handle.handle,
         sv=statevector.array.data.ptr,
         sv_data_type=statevector.cuda_dtype,
-        n_index_bits=matrix.n_qubits,
+        n_index_bits=statevector.n_qubits, # TOTAL number of qubits in the statevector
         matrix=matrix.matrix.data.ptr,
         matrix_data_type=matrix.cuda_dtype,
         layout=cusv.MatrixLayout.ROW,

@@ -18,7 +18,11 @@ from typing import Literal
 
 import cupy as cp  # type: ignore
 import cuquantum.custatevec as cusv  # type: ignore
-from .apply import apply_matrix, apply_pauli_rotation, pytket_paulis_to_custatevec_paulis
+from .apply import (
+    apply_matrix,
+    apply_pauli_rotation,
+    pytket_paulis_to_custatevec_paulis,
+)
 from cuquantum.bindings._utils import cudaDataType
 from cuquantum.bindings.custatevec import StateVectorType
 from .dtype import cuquantum_to_np_dtype
@@ -70,10 +74,13 @@ def run_circuit(
     loglevel: int = logging.WARNING,
     logfile: str | None = None,
 ) -> dict[Qubit, Bit]:
-    state : CuStateVector
+    state: CuStateVector
     if type(initial_state) is str:
         state = initial_statevector(
-            handle,  circuit.n_qubits, initial_state, dtype=cudaDataType.CUDA_C_64F,
+            handle,
+            circuit.n_qubits,
+            initial_state,
+            dtype=cudaDataType.CUDA_C_64F,
         )
     else:
         state = initial_state
@@ -84,16 +91,22 @@ def run_circuit(
 
     # Remove end-of-circuit measurements and keep track of them separately
     # It also resolves implicit SWAPs
-    _measurements : dict[Qubit, Bit]
+    _measurements: dict[Qubit, Bit]
     circuit, _measurements = _remove_meas_and_implicit_swaps(circuit)
 
     # Identify each qubit with an index
-    _qubit_idx_map : dict[Qubit, int] = {q: i for i, q in enumerate(sorted(circuit.qubits))}
+    # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
+    # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
 
-    _phase = circuit.phase
-    if type(_phase) is Expr:
-        raise NotImplementedError("Symbols not yet supported.")
-    state.apply_phase(_phase)
+    _qubit_idx_map: dict[Qubit, int] = {
+        q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
+    }
+
+    # _phase = circuit.phase
+    # if type(_phase) is Expr:
+    #     raise NotImplementedError("Symbols not yet supported.")
+    # state.apply_phase(_phase)
+    # Apply the phase from the circuit: sv *= np.exp(1j * np.pi * self._phase)
 
     # Apply all gates to the initial state
     commands = circuit.get_commands()
@@ -101,7 +114,7 @@ def run_circuit(
         op = com.op
         if len(op.free_symbols()) > 0:
             raise NotImplementedError("Symbolic circuits not yet supported")
-        
+
         gate_name = op.get_name()
         qubits = [_qubit_idx_map[x] for x in com.qubits]
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
@@ -110,13 +123,13 @@ def run_circuit(
         # TODO: Also check if Rz, Rx, ... should be included in this first branch
         if type(op) is PauliExpBox:
             cusv_paulis = list(map(pytket_paulis_to_custatevec_paulis, op.get_paulis()))
-            angle : float = op.get_phase()
+            angle: float = op.get_phase()
             apply_pauli_rotation(
                 handle=handle,
                 paulis=cusv_paulis,
                 statevector=state,
                 angle=angle,
-                targets=targets
+                targets=targets,
             )
         else:
             adjoint = False
@@ -130,7 +143,7 @@ def run_circuit(
                 statevector=state,
                 targets=targets,
                 controls=controls,
-                control_bit_values=[0] * n_controls,
+                control_bit_values=[1] * n_controls,
                 adjoint=adjoint,
             )
 
