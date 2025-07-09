@@ -7,12 +7,11 @@ import cuquantum.custatevec as cusv  # type: ignore
 
 from cuquantum.custatevec import Pauli as cusvPauli
 
-from pytket.pauli import Pauli as tkPauli
-
 from .handle import CuStateVecHandle
 from .gate_classes import CuStateVecMatrix
 from .statevector import CuStateVector
 
+from pytket.circuit import OpType
 
 
 def apply_matrix(
@@ -45,12 +44,11 @@ def apply_matrix(
     # applying a single-qubit gate like X only requires a 2x2 matrix.
     # cuStateVec internally handles embedding it into the full system
     # based on the specified target qubit(s).
-
     cusv.apply_matrix(
         handle=handle.handle,
         sv=statevector.array.data.ptr,
         sv_data_type=statevector.cuda_dtype,
-        n_index_bits=statevector.n_qubits, # TOTAL number of qubits in the statevector
+        n_index_bits=statevector.n_qubits,  # TOTAL number of qubits in the statevector
         matrix=matrix.matrix.data.ptr,
         matrix_data_type=matrix.cuda_dtype,
         layout=cusv.MatrixLayout.ROW,
@@ -66,15 +64,27 @@ def apply_matrix(
     )
 
 
-_pytket_pauli_to_custatevec_pauli_map = {
-    tkPauli.X: cusvPauli.X,
-    tkPauli.Y: cusvPauli.Y,
-    tkPauli.Z: cusvPauli.Z,
-}
+def pytket_paulis_to_custatevec_paulis(pauli_rotation_type: OpType, angle_pi: float) -> tuple[list[cusvPauli], float]:
+    """Map pytket OpType to cuStateVec Pauli and convert angle from multiples of π to radians.
 
+    Args:
+        op_type (OpType): The pytket operation type (e.g., Rx, Ry, Rz).
+        angle_pi (float): The angle in multiples of π.
 
-def pytket_paulis_to_custatevec_paulis(pauli: tkPauli) -> cusvPauli:
-    return _pytket_pauli_to_custatevec_pauli_map[pauli]
+    Returns:
+        tuple[list[cusvPauli], float]: A list of cuStateVec Pauli(s) and the angle in radians.
+    """
+    _pytket_pauli_to_custatevec_pauli_map = {
+        OpType.Rx: [cusvPauli.X],
+        OpType.Ry: [cusvPauli.Y],
+        OpType.Rz: [cusvPauli.Z],
+    }
+    if pauli_rotation_type not in _pytket_pauli_to_custatevec_pauli_map:
+        raise ValueError(f"Unsupported OpType: {pauli_rotation_type}")
+    
+    paulis = _pytket_pauli_to_custatevec_pauli_map[pauli_rotation_type]
+    angle_radians = angle_pi * np.pi  # Convert from multiples of π to radians
+    return paulis, angle_radians
 
 
 def apply_pauli_rotation(
@@ -99,10 +109,10 @@ def apply_pauli_rotation(
         )
 
     cusv.apply_pauli_rotation(
-        handle=handle,
+        handle=handle.handle,
         sv=statevector.array.data.ptr,
         sv_data_type=statevector.cuda_dtype,
-        n_index_bits=statevector.n_qubits,
+        n_index_bits=statevector.n_qubits, # TOTAL number of qubits in the statevector
         theta=angle,
         paulis=paulis,
         targets=targets,

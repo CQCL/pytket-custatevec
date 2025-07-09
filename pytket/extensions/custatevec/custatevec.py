@@ -97,7 +97,6 @@ def run_circuit(
     # Identify each qubit with an index
     # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
     # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
-
     _qubit_idx_map: dict[Qubit, int] = {
         q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
     }
@@ -120,15 +119,17 @@ def run_circuit(
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
         controls, targets = qubits[:n_controls], qubits[n_controls:]
 
-        # TODO: Also check if Rz, Rx, ... should be included in this first branch
-        if type(op) is PauliExpBox:
-            cusv_paulis = list(map(pytket_paulis_to_custatevec_paulis, op.get_paulis()))
-            angle: float = op.get_phase()
+        # TODO: Check if PauliExpBox should go there and what is does
+        if op.type in (OpType.Rx, OpType.Ry, OpType.Rz):
+            cusv_paulis, angle_radians = pytket_paulis_to_custatevec_paulis(
+                pauli_rotation_type=op.type,
+                angle_pi=float(op.params[0]),
+            )
             apply_pauli_rotation(
                 handle=handle,
                 paulis=cusv_paulis,
                 statevector=state,
-                angle=angle,
+                angle=angle_radians,
                 targets=targets,
             )
         else:
