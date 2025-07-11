@@ -100,6 +100,7 @@ def run_circuit(
         q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
     }
 
+    # TODO: Reenable phase of circuit
     # _phase = circuit.phase
     # if type(_phase) is Expr:
     #     raise NotImplementedError("Symbols not yet supported.")

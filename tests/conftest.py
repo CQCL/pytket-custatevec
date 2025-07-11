@@ -58,12 +58,12 @@ def single_qubit_non_clifford_circuit():
 @pytest.fixture
 def two_qubit_entangling_circuit():
     c = Circuit(4)
-    # c.ECR(0, 1)
+    c.ECR(0, 1)
     c.SWAP(1, 2)
     c.ISWAP(0.5, 2, 3)
     c.PhasedISWAP(0.3, 0.7, 3, 0)
     c.XXPhase(0.5, 0, 1)
     c.YYPhase(0.6, 2, 3)
     c.ZZPhase(0.4, 1, 2)
-    # c.ZZMax(0, 3)
+    c.ZZMax(0, 3)
     return c

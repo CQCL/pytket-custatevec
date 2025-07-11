@@ -15,8 +15,8 @@ from pytket.extensions.custatevec.backends import CuStateVecStateBackend
         "two_qubit_entangling_circuit",
     ],
 )
-def test_custatevec_vs_aer(circuit_fixture: str, request: pytest.FixtureRequest) -> None:
-    """Test the CuStateVecStateBackend against the AerStateBackend for various quantum circuits.
+def test_custatevec_vs_aer_and_qulacs(circuit_fixture: str, request: pytest.FixtureRequest) -> None:
+    """Test the CuStateVecStateBackend against AerState and Qulacs Backends for various quantum circuits.
 
     Args:
         circuit_fixture: The fixture name for the quantum circuit to test.
@@ -34,19 +34,25 @@ def test_custatevec_vs_aer(circuit_fixture: str, request: pytest.FixtureRequest)
         expected = None
 
     cu_backend = CuStateVecStateBackend()
-
     cu_handle = cu_backend.process_circuits([circuit])
     cu_result = cu_backend.get_result(cu_handle[0]).get_state().array
 
     if expected is not None:
         assert np.allclose(cu_result, expected)
     else:
-        from pytket.extensions.qiskit.backends.aer import (  # noqa: PLC0415
-            AerStateBackend,
-        )
+        from pytket.extensions.qiskit.backends.aer import AerStateBackend
+        from pytket.extensions.qulacs.backends import QulacsBackend
+
+        # Test against Qulacs Backend
+        qulacs_backend = QulacsBackend()
+        qulacs_circuit = qulacs_backend.get_compiled_circuit(circuit)
+        qulacs_handle = qulacs_backend.process_circuit(qulacs_circuit)
+        qulacs_result = qulacs_backend.get_result(qulacs_handle).get_state()
+        assert np.allclose(cu_result, qulacs_result)
+
+        # Test against AerState Backend
         aer_backend = AerStateBackend()
-        if not aer_backend.valid_circuit(circuit):
-            circuit = aer_backend.get_compiled_circuit(circuit)
+        circuit = aer_backend.get_compiled_circuit(circuit)
         aer_handle = aer_backend.process_circuit(circuit)
         aer_result = aer_backend.get_result(aer_handle).get_state()
         assert np.allclose(cu_result, aer_result)

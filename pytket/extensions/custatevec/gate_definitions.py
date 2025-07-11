@@ -61,7 +61,7 @@ _SWAP = np.array(
     ],
 )
 
-SWAP = UnparameterizedGate("SWAP", _SWAP)
+SWAP = UnparameterizedGate("SWAP", _SWAP) # invariant under qubit permutation
 
 def _Rx(params: Sequence[float], dtype: DTypeLike) -> NDArray[Any]:
     param_pi_2 = params[0] * np.pi / 2

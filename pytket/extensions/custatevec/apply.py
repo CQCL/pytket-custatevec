@@ -26,6 +26,7 @@ def apply_matrix(
 ) -> None:
 
     targets = [targets] if targets is int else targets
+    targets.reverse()  # cuStateVec expects targets in little-endian order
     if controls is None:
         controls = []
     else:
@@ -100,6 +101,7 @@ def apply_pauli_rotation(
     control_bit_values: Sequence[int] | int | None = None,
 ) -> None:
     targets = [targets] if targets is int else targets
+    targets.reverse()  # cuStateVec expects targets in little-endian order
     if controls is None:
         controls = []
     else:
