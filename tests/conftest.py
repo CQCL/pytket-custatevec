@@ -24,6 +24,15 @@ def bell_circuit():
     return c, expected
 
 @pytest.fixture
+def test_circuit():
+    c = Circuit(3)
+    c.X(2)
+    c.H(0)
+    c.CX(0, 1)
+    expected = [0, 0.70710678, 0, 0, 0, 0, 0, 0.70710678]
+    return c, expected
+
+@pytest.fixture
 def three_qubit_ghz_circuit():
     c = Circuit(3)
     c.H(0)

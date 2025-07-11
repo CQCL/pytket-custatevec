@@ -7,6 +7,7 @@ from pytket.extensions.custatevec.backends import CuStateVecStateBackend
 @pytest.mark.parametrize(
     "circuit_fixture",
     [
+        "test_circuit",
         "bell_circuit",
         "three_qubit_ghz_circuit",
         "four_qubit_superposition_circuit",
@@ -56,3 +57,38 @@ def test_custatevec_vs_aer_and_qulacs(circuit_fixture: str, request: pytest.Fixt
         aer_handle = aer_backend.process_circuit(circuit)
         aer_result = aer_backend.get_result(aer_handle).get_state()
         assert np.allclose(cu_result, aer_result)
+
+
+def test_initial_statevector():
+    """Test the initial_statevector function for all possible types and different qubit numbers and compare against the expected state vector."""
+    from cuquantum.bindings._utils import cudaDataType
+
+    from pytket.extensions.custatevec.custatevec import initial_statevector
+    from pytket.extensions.custatevec.handle import CuStateVecHandle
+
+
+    initial_states = {
+        "zero":    lambda n: np.eye(1, 2**n, 0, dtype=np.complex128).ravel(),
+        "uniform": lambda n: np.full(2**n, 1 / np.sqrt(2**n), dtype=np.complex128),
+        "ghz":     lambda n: np.array(
+            [1 / np.sqrt(2) if i in [0, 2**n - 1] else 0 for i in range(2**n)],
+            dtype=np.complex128,
+        ),
+        "w":       lambda n: np.array(
+            [1 / np.sqrt(n) if (i).bit_count() == 1 else 0 for i in range(2**n)],
+            dtype=np.complex128,
+        ),
+    }
+
+    qubit_numbers = [2, 3, 4]
+
+    for state_name, state_func in initial_states.items():
+        for n in qubit_numbers:
+            with CuStateVecHandle() as libhandle:
+                sv = initial_statevector(
+                    libhandle, n, state_name, dtype=cudaDataType.CUDA_C_64F,
+                )
+                generated_state = sv.array
+                expected_state = state_func(n)
+                assert np.allclose(generated_state, expected_state), f"Mismatch for {state_name} with {n} qubits"
+

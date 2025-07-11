@@ -208,7 +208,6 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         """
         handle_list = []
         for circuit in circuits:
-            print(circuit.get_commands())
             with CuStateVecHandle() as libhandle:
                 sv = initial_statevector(
                     libhandle, circuit.n_qubits, "zero", dtype=cudaDataType.CUDA_C_64F,

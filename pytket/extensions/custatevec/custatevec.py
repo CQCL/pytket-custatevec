@@ -82,10 +82,9 @@ def run_circuit(
             dtype=cudaDataType.CUDA_C_64F,
         )
     else:
-        state = initial_state
+        state = initial_state # IMPORTANT: User needs to follow little-endian convention of cuStateVec 
     if matrix_dtype is None:
         matrix_dtype = cudaDataType.CUDA_C_64F
-
     _logger = set_logger("GeneralState", level=loglevel, file=logfile)
 
     # Remove end-of-circuit measurements and keep track of them separately
@@ -113,7 +112,6 @@ def run_circuit(
         op = com.op
         if len(op.free_symbols()) > 0:
             raise NotImplementedError("Symbolic circuits not yet supported")
-
         gate_name = op.get_name()
         qubits = [_qubit_idx_map[x] for x in com.qubits]
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
@@ -150,7 +148,6 @@ def run_circuit(
                 control_bit_values=[1] * n_controls,
                 adjoint=adjoint,
             )
-
     handle.stream.synchronize()
 
     return _measurements
