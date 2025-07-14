@@ -76,3 +76,11 @@ def two_qubit_entangling_circuit():
     c.ZZPhase(0.4, 1, 2)
     c.ZZMax(0, 3)
     return c
+
+# Group 4: Miscellaneous Circuits
+@pytest.fixture
+def global_phase_circuit():
+    c = Circuit(1)
+    c.add_phase(0.5)
+    expected = np.asarray([1, 0]) * np.exp(1j * np.pi * 0.5)
+    return c, expected

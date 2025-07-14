@@ -99,19 +99,18 @@ def run_circuit(
         q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
     }
 
-    # TODO: Reenable phase of circuit
-    # _phase = circuit.phase
-    # if type(_phase) is Expr:
-    #     raise NotImplementedError("Symbols not yet supported.")
-    # state.apply_phase(_phase)
-    # Apply the phase from the circuit: sv *= np.exp(1j * np.pi * self._phase)
+    _phase = circuit.phase
+    if type(_phase) is float:
+        state.apply_phase(_phase)
+    else:
+        raise NotImplementedError("Symbols not yet supported.")  # noqa: EM101
 
     # Apply all gates to the initial state
     commands = circuit.get_commands()
     for com in commands:
         op = com.op
         if len(op.free_symbols()) > 0:
-            raise NotImplementedError("Symbolic circuits not yet supported")
+            raise NotImplementedError("Symbolic circuits not yet supported")  # noqa: EM101
         gate_name = op.get_name()
         qubits = [_qubit_idx_map[x] for x in com.qubits]
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
