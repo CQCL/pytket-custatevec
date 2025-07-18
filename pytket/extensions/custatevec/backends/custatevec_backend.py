@@ -222,20 +222,7 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
                     "zero",
                     dtype=cudaDataType.CUDA_C_64F,
                 )
-                # Identify each qubit with an index
-                # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
-                # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
-                # Now all operations by the cuStateVec library will be in the correct order.
-                _qubit_idx_map: dict[Qubit, int] = {
-                    q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
-                }
-                # Remove end-of-circuit measurements and keep track of them separately
-                # It also resolves implicit SWAPs
-                _measurements: dict[Qubit, Bit]
-                circuit, _measurements = _remove_meas_and_implicit_swaps(
-                    circuit,
-                )
-                run_circuit(libhandle, circuit, sv, _qubit_idx_map)
+                run_circuit(libhandle, circuit, sv)
             handle = ResultHandle(str(uuid4()))
             # In order to be able to use the BackendResult functionality,
             # we only pass the array of the statevector to BackendResult

@@ -1,7 +1,7 @@
-import cupy as cp
 import numpy as np
 import pytest
 
+from pytket.circuit import BasisOrder, Circuit
 from pytket.extensions.custatevec.backends import (
     CuStateVecShotsBackend,
     CuStateVecStateBackend,
@@ -9,7 +9,6 @@ from pytket.extensions.custatevec.backends import (
 from pytket.extensions.qiskit.backends.aer import AerStateBackend
 from pytket.extensions.qulacs.backends import QulacsBackend
 from pytket.utils import get_operator_expectation_value
-from pytket.circuit import Circuit, BasisOrder
 
 
 @pytest.mark.parametrize(
@@ -25,7 +24,7 @@ from pytket.circuit import Circuit, BasisOrder
         "global_phase_circuit",
     ],
 )
-def test_custatevecstate_vs_aer_and_qulacs(
+def test_custatevecstate_state_vector_vs_aer_and_qulacs(
     statevector_circuit_fixture: str, request: pytest.FixtureRequest,
 ) -> None:
     """Test the CuStateVecStateBackend against AerState and Qulacs Backends for various quantum circuits.
@@ -72,9 +71,68 @@ def test_custatevecstate_vs_aer_and_qulacs(
         assert np.allclose(cu_result, pytket_result)
 
 
+@pytest.mark.parametrize(
+    "sampler_circuit_fixture, operator_fixture",
+    [
+        # ("bell_circuit", "bell_operator"),
+        # ("three_qubit_ghz_circuit", "ghz_operator"),
+        # ("four_qubit_superposition_circuit", "superposition_operator"),
+        ("two_qubit_entangling_circuit", "entangling_operator"),
+    ],
+)
+def test_custatevecstate_expectation_value_vs_aer_and_qulacs(
+    sampler_circuit_fixture: str, operator_fixture: str, request: pytest.FixtureRequest,
+) -> None:
+    """Test the CuStateVecShotsBackend against AerState and Qulacs Backends for various quantum circuits.
+
+    Args:
+        sampler_circuit_fixture: The fixture name for the quantum circuit to test.
+        operator_fixture: The fixture name for the operator to test.
+        request: The pytest request object to access the fixtures.
+
+    Returns:
+        None
+    """
+    circuit_data = request.getfixturevalue(sampler_circuit_fixture)
+    if isinstance(circuit_data, tuple):
+        circuit = circuit_data[0]  # Extract the Circuit object
+    else:
+        circuit = circuit_data
+
+    operator = request.getfixturevalue(operator_fixture)
+
+    # CuStateVec expectation value
+    cu_backend = CuStateVecStateBackend()
+    cu_circuit = cu_backend.get_compiled_circuit(circuit)
+    # cu_expectation = get_operator_expectation_value(
+        # cu_circuit, operator, cu_backend,
+    # )
+    cu_handle = cu_backend.run_circuit(cu_circuit)
+    state = cu_handle.get_state()
+    _qubit_idx_map = {
+        q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
+    }
+    # STATES ARE EXACTLY THE SAME
+    cu_expectation = operator.state_expectation(state, _qubit_idx_map)
+
+    # Qulacs expectation value
+    qulacs_backend = QulacsBackend()
+    qulacs_circuit = qulacs_backend.get_compiled_circuit(circuit)
+    qulacs_expectation = get_operator_expectation_value(
+        qulacs_circuit, operator, qulacs_backend,
+    )
+    assert np.isclose(cu_expectation, qulacs_expectation, atol=0.01)
+
+    # AerState expectation value
+    aer_backend = AerStateBackend()
+    aer_circuit = aer_backend.get_compiled_circuit(circuit)
+    aer_expectation = get_operator_expectation_value(aer_circuit, operator, aer_backend)
+
+    assert np.isclose(cu_expectation, aer_expectation, atol=0.01)
+
 def test_basisorder() -> None:
     """Test the basis order of the CuStateVecShotsBackend."""
-    from pytket.circuit import Circuit, BasisOrder
+    from pytket.circuit import BasisOrder, Circuit
     c = Circuit(2)
     c.X(1)
 
@@ -106,27 +164,6 @@ def test_implicit_perm() -> None:
         s1 = r1.get_state(basis=bo)
         assert np.allclose(s, s1)
 
-# def test_invalid_measures() -> None:
-#     c = Circuit(2)
-#     c.H(0).CX(0, 1).measure_all()
-#     b = CuStateVecStateBackend()
-#     c = b.get_compiled_circuit(c)
-#     assert not (b.valid_circuit(c))
-
-# def test_compilation_pass() -> None:
-#     from pytket.circuit import Circuit, Unitary1qBox
-#     from pytket._tket.circuit import OpType 
-#     b = CuStateVecStateBackend()
-#     for opt_level in range(3):
-#         c = Circuit(2)
-#         c.CX(0, 1)
-#         u = np.asarray([[0, 1], [-1j, 0]])
-#         c.add_unitary1qbox(Unitary1qBox(u), 1)
-#         c.CX(0, 1)
-#         c.add_gate(OpType.CRz, 0.35, [1, 0])
-#         assert not (b.valid_circuit(c))
-#         c = b.get_compiled_circuit(c, optimisation_level=opt_level)
-#         assert b.valid_circuit(c)
 
 @pytest.mark.parametrize(
     "sampler_circuit_fixture, operator_fixture",

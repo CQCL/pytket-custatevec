@@ -69,7 +69,6 @@ def run_circuit(
     handle: CuStateVecHandle,
     circuit: Circuit,
     initial_state: CuStateVector | str = "zero",
-    _qubit_idx_map: dict[Qubit | Bit, int] | None = None,
     matrix_dtype: cudaDataType | None = None,
     loglevel: int = logging.WARNING,
     logfile: str | None = None,
@@ -93,6 +92,22 @@ def run_circuit(
         state.apply_phase(_phase)
     else:
         raise NotImplementedError("Symbols not yet supported.")  # noqa: EM101
+
+    # Identify each qubit with an index
+    # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
+    # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
+    # Now all operations by the cuStateVec library will be in the correct order.
+    # Reordering needs to be done inside the function since get_operator_expectation_value
+    # just calls the run_circuit function directly.
+    _qubit_idx_map: dict[Qubit, int] = {
+        q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
+    }
+    # Remove end-of-circuit measurements and keep track of them separately
+    # It also resolves implicit SWAPs
+    _measurements: dict[Qubit, Bit]
+    circuit, _measurements = _remove_meas_and_implicit_swaps(
+        circuit,
+    )
 
     # Apply all gates to the initial state
     commands = circuit.get_commands()
