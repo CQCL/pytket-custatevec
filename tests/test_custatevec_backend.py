@@ -9,6 +9,7 @@ from pytket.extensions.custatevec.backends import (
 from pytket.extensions.qiskit.backends.aer import AerStateBackend
 from pytket.extensions.qulacs.backends import QulacsBackend
 from pytket.utils import get_operator_expectation_value
+from pytket.circuit import Circuit, BasisOrder
 
 
 @pytest.mark.parametrize(
@@ -69,7 +70,63 @@ def test_custatevecstate_vs_aer_and_qulacs(
         # Test against pytket
         pytket_result = circuit.get_statevector()
         assert np.allclose(cu_result, pytket_result)
-        
+
+
+def test_basisorder() -> None:
+    """Test the basis order of the CuStateVecShotsBackend."""
+    from pytket.circuit import Circuit, BasisOrder
+    c = Circuit(2)
+    c.X(1)
+
+    cu_backend = CuStateVecStateBackend()
+    c = cu_backend.get_compiled_circuit(c)
+    cu_handle = cu_backend.process_circuits([c])
+    cu_result = cu_backend.get_result(cu_handle[0])
+    assert np.allclose(cu_result.get_state(), np.asarray([0, 1, 0, 0]))
+    assert np.allclose(cu_result.get_state(basis=BasisOrder.dlo), np.asarray([0, 0, 1, 0]))
+
+
+def test_implicit_perm() -> None:
+    """Test the implicit qubit permutation in CuStateVecStateBackend."""
+    from pytket.passes import CliffordSimp
+    c = Circuit(2)
+    c.CX(0, 1)
+    c.CX(1, 0)
+    c.Ry(0.1, 1)
+    c1 = c.copy()
+    CliffordSimp().apply(c1)
+    b = CuStateVecStateBackend()
+    c = b.get_compiled_circuit(c, optimisation_level=1)
+    c1 = b.get_compiled_circuit(c1, optimisation_level=1)
+    assert c.implicit_qubit_permutation() != c1.implicit_qubit_permutation()
+    h, h1 = b.process_circuits([c, c1])
+    r, r1 = b.get_results([h, h1])
+    for bo in [BasisOrder.ilo, BasisOrder.dlo]:
+        s = r.get_state(basis=bo)
+        s1 = r1.get_state(basis=bo)
+        assert np.allclose(s, s1)
+
+# def test_invalid_measures() -> None:
+#     c = Circuit(2)
+#     c.H(0).CX(0, 1).measure_all()
+#     b = CuStateVecStateBackend()
+#     c = b.get_compiled_circuit(c)
+#     assert not (b.valid_circuit(c))
+
+# def test_compilation_pass() -> None:
+#     from pytket.circuit import Circuit, Unitary1qBox
+#     from pytket._tket.circuit import OpType 
+#     b = CuStateVecStateBackend()
+#     for opt_level in range(3):
+#         c = Circuit(2)
+#         c.CX(0, 1)
+#         u = np.asarray([[0, 1], [-1j, 0]])
+#         c.add_unitary1qbox(Unitary1qBox(u), 1)
+#         c.CX(0, 1)
+#         c.add_gate(OpType.CRz, 0.35, [1, 0])
+#         assert not (b.valid_circuit(c))
+#         c = b.get_compiled_circuit(c, optimisation_level=opt_level)
+#         assert b.valid_circuit(c)
 
 @pytest.mark.parametrize(
     "sampler_circuit_fixture, operator_fixture",
