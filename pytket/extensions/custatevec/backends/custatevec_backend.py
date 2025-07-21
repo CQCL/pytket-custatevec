@@ -16,10 +16,11 @@
 
 from abc import abstractmethod
 from collections.abc import Sequence
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
 import cupy as cp
+import cuquantum.custatevec as cusv  # type: ignore
 import numpy as np
 from cuquantum import cudaDataType
 
@@ -30,7 +31,11 @@ from pytket.backends.backendinfo import BackendInfo
 from pytket.backends.backendresult import BackendResult
 from pytket.backends.resulthandle import ResultHandle, _ResultIdTuple
 from pytket.backends.status import CircuitStatus, StatusEnum
-from pytket.extensions.custatevec.custatevec import initial_statevector, run_circuit
+from pytket.extensions.custatevec.custatevec import (
+    compute_expectation,
+    initial_statevector,
+    run_circuit,
+)
 from pytket.extensions.custatevec.handle import CuStateVecHandle
 from pytket.passes import (  # type: ignore
     BasePass,
@@ -213,6 +218,7 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         Returns:
             Results handle objects.
         """
+        # TODO Valid check
         handle_list = []
         for circuit in circuits:
             with CuStateVecHandle() as libhandle:
@@ -230,6 +236,15 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             handle_list.append(handle)
         return handle_list
 
+    def get_operator_expectation_value(
+        self,
+        statevector,
+        operator,
+    ):
+        with CuStateVecHandle() as handle:
+            operator_expectation_value = compute_expectation(handle, statevector, operator)
+
+        return operator_expectation_value
 
 class CuStateVecShotsBackend(_CuStateVecBaseBackend):
     """A pytket Backend using ``GeneralState`` to obtain shots."""

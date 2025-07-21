@@ -154,3 +154,23 @@ def run_circuit(
     handle.stream.synchronize()
 
     # return _measurements
+
+def compute_expectation(
+    handle,
+    statevector: CuStateVector,
+):
+    with handle.stream:
+                cusv.compute_expectation(
+                    handle=handle.handle,
+                    sv=statevector.array.data.ptr,
+                    sv_data_type=statevector.cuda_dtype,
+                    n_index_bits=statevector.n_qubits,
+                    matrix=matrix.matrix.data.ptr,
+                    matrix_data_type=matrix.cuda_dtype,
+                    layout=cusv.MatrixLayout.ROW,
+                    # basis_bits=,
+                    # n_basis_bits=
+                    compute_type=compute_type,
+                    extra_workspace=extra_workspace,
+                    extra_workspace_size_in_bytes=extra_workspace_size_in_bytes,
+                )
