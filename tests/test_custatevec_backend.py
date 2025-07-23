@@ -167,17 +167,33 @@ def test_implicit_perm() -> None:
         s1 = r1.get_state(basis=bo)
         assert np.allclose(s, s1)
 
+def test_sampler_bell() -> None:
+    # c = Circuit(2, 2)
+    # c.H(0)
+    # c.CX(0, 1)
+    c = Circuit(1)
+    c.H(0)
+    c.measure_all()
+    cu_backend = CuStateVecShotsBackend()
+    c = cu_backend.get_compiled_circuit(c)
+    cu_handle = cu_backend.process_circuit(c, n_shots=200, seed=4)
+    counts = cu_backend.get_result(cu_handle).get_counts()
+    print(counts)
+    # assert res.get_shots().shape == (10, 2)
+    # assert res.get_counts() == {(0, 0): 5, (1, 1): 5}
+
+
 
 @pytest.mark.parametrize(
     "sampler_circuit_fixture, operator_fixture",
     [
-        # ("bell_circuit", "bell_operator"),
-        # ("three_qubit_ghz_circuit", "ghz_operator"),
-        # ("four_qubit_superposition_circuit", "superposition_operator"),
+        ("bell_circuit", "bell_operator"),
+        ("three_qubit_ghz_circuit", "ghz_operator"),
+        ("four_qubit_superposition_circuit", "superposition_operator"),
         ("two_qubit_entangling_circuit", "entangling_operator"),
     ],
 )
-def test_custatevecshots_vs_aer_and_qulacs(
+def test_custatevecshots_expectation_value_vs_aer_and_qulacs(
     sampler_circuit_fixture: str, operator_fixture: str, request: pytest.FixtureRequest,
 ) -> None:
     """Test the CuStateVecShotsBackend against AerState and Qulacs Backends for various quantum circuits.
