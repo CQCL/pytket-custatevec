@@ -74,9 +74,9 @@ def test_custatevecstate_state_vector_vs_aer_and_qulacs(
 @pytest.mark.parametrize(
     "sampler_circuit_fixture, operator_fixture",
     [
-        # ("bell_circuit", "bell_operator"),
-        # ("three_qubit_ghz_circuit", "ghz_operator"),
-        # ("four_qubit_superposition_circuit", "superposition_operator"),
+        ("bell_circuit", "bell_operator"),
+        ("three_qubit_ghz_circuit", "ghz_operator"),
+        ("four_qubit_superposition_circuit", "superposition_operator"),
         ("two_qubit_entangling_circuit", "entangling_operator"),
     ],
 )

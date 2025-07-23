@@ -11,19 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import annotations  # type: ignore
+from __future__ import annotations
 
 import logging
 from typing import Literal
-import numpy as np
 
-import cupy as cp  # type: ignore
-import cuquantum.custatevec as cusv  # type: ignore
+import cupy as cp
+import cuquantum.custatevec as cusv
+import numpy as np
+from cuquantum import ComputeType
 from cuquantum.bindings._utils import cudaDataType
 from cuquantum.bindings.custatevec import StateVectorType
-from cuquantum import ComputeType
 
 from pytket.circuit import Bit, Circuit, OpType, Qubit
+from pytket.extensions.custatevec.gate_classes import CuStateVecMatrix
 from pytket.utils.operators import QubitPauliOperator
 
 from .apply import (
@@ -31,6 +32,7 @@ from .apply import (
     apply_pauli_rotation,
     pytket_paulis_to_custatevec_paulis,
 )
+from .dtype import cuquantum_to_np_dtype
 from .gate_definitions import get_gate_matrix, get_uncontrolled_gate
 from .handle import CuStateVecHandle
 from .logger import set_logger
@@ -158,39 +160,64 @@ def run_circuit(
 
     # return _measurements
 
-def compute_expectation(
+def compute_expectation(  # noqa: PLR0913
     handle: CuStateVecHandle,
     statevector: CuStateVector,
     operator: QubitPauliOperator,
-):
-    from .dtype import cuquantum_to_np_dtype
-    from pytket.extensions.custatevec.gate_classes import CuStateVecMatrix
+    matrix_dtype: cudaDataType | None = None,
+    loglevel: int = logging.WARNING,
+    logfile: str | None = None,
+) -> np.float64:
+    """Compute the expectation value of a QubitPauliOperator on a CuStateVector.
 
-    matrix_dtype = cudaDataType.CUDA_C_64F
+    Args:
+        handle (CuStateVecHandle): cuStateVec handle.
+        statevector (CuStateVector): The state vector on which to compute the exp. val.
+        operator (QubitPauliOperator): The operator for which to compute the exp. val.
+        matrix_dtype (cudaDataType, optional): The CUDA data type for operator matrix.
+            Defaults to None, which uses CUDA_C_64F.
+        loglevel (int, optional): Logging level. Defaults to logging.WARNING.
+        logfile (str, optional): Log file path. Defaults to None, which uses console.
+
+    Returns:
+        np.complex128: The expectation value of the operator on the state vector.
+    """
+    if not isinstance(operator, QubitPauliOperator):
+        raise TypeError("operator must be a QubitPauliOperator") # noqa: EM101, TRY003
+    if not isinstance(statevector, CuStateVector):
+        raise TypeError("statevector must be a CuStateVector")  # noqa: EM101, TRY003
+
+    if matrix_dtype is None:
+        matrix_dtype = cudaDataType.CUDA_C_64F
+    _logger = set_logger("GeneralState", level=loglevel, file=logfile)
+
+    # Convert the operator to a sparse matrix and create a CuStateVecMatrix
     dtype = cuquantum_to_np_dtype(matrix_dtype)
-    matrix = operator.to_sparse_matrix().toarray()
+    matrix_array = operator.to_sparse_matrix().toarray()
     matrix = CuStateVecMatrix(
-            cp.array(matrix, dtype=dtype), matrix_dtype,
+            cp.array(matrix_array, dtype=dtype), matrix_dtype,
         )
     # Match cuStateVec's little-endian convention: Sort basis bits in LSB-to-MSB order
     basis_bits = sorted([i.index[0] for i in list(operator.all_qubits)])
-    expectation_value = np.zeros(1, dtype=np.complex128)
+
+    expectation_value = np.empty(1, dtype=np.float64)
+
     with handle.stream:
         cusv.compute_expectation(
-            handle.handle,
-            statevector.array.data.ptr,
-            statevector.cuda_dtype,
-            statevector.n_qubits,
-            expectation_value.ctypes.data,
-            cudaDataType.CUDA_R_64F,
-            matrix.matrix.data.ptr,
-            matrix.cuda_dtype,
-            cusv.MatrixLayout.ROW,
-            basis_bits,
-            len(basis_bits),
-            ComputeType.COMPUTE_DEFAULT,
-            0,
-            0,
+            handle=handle.handle,
+            sv=statevector.array.data.ptr,
+            sv_data_type=statevector.cuda_dtype,
+            n_index_bits=statevector.n_qubits,
+            expectation_value=expectation_value.ctypes.data, # requires **host** pointer
+            expectation_data_type=cudaDataType.CUDA_R_64F,
+            matrix=matrix.matrix.data.ptr,
+            matrix_data_type=matrix.cuda_dtype,
+            layout=cusv.MatrixLayout.ROW,
+            basis_bits=basis_bits,
+            n_basis_bits=len(basis_bits),
+            compute_type=ComputeType.COMPUTE_DEFAULT,
+            extra_workspace=0,
+            extra_workspace_size_in_bytes=0,
         )
     handle.stream.synchronize()
     return expectation_value[0]

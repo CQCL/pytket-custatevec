@@ -1,7 +1,6 @@
 import math  # noqa: EXE002, D100
 
 import cupy as cp
-import numpy as np
 from cuquantum import cudaDataType
 
 from .gate_classes import *  # noqa: F403
