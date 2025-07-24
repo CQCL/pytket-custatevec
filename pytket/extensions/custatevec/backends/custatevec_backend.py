@@ -319,11 +319,11 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 run_circuit(libhandle, circuit, sv)
 
                 sampler_descriptor, size_t = cusv.sampler_create(
-                    libhandle.handle,
-                    sv.array.data.ptr,
-                    cudaDataType.CUDA_C_64F,
-                    sv.n_qubits,
-                    n_shots,
+                    handle=libhandle.handle,
+                    sv=sv.array.data.ptr,
+                    sv_data_type=cudaDataType.CUDA_C_64F,
+                    n_index_bits=sv.n_qubits,
+                    n_max_shots=n_shots,
                 )
 
                 bit_strings = np.empty((n_shots, 1), dtype=np.int64) # needs to be int64
@@ -354,6 +354,8 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 #TODO: Postprocessing - sample only the qubits that should be measured?
 
         handle = ResultHandle(str(uuid4()))
+        # Reformat bit_strings for OutcomeArray
+        bit_strings = [[int(bit) for bit in format(int(s), f'0{2}b')] for s in bit_strings.flatten()]  
         # In order to be able to use the BackendResult functionality,
         # we only pass the array of the statevector to BackendResult
         self._cache[handle] = {"result": BackendResult(state=cp.asnumpy(sv.array),

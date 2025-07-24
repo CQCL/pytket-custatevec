@@ -168,19 +168,20 @@ def test_implicit_perm() -> None:
         assert np.allclose(s, s1)
 
 def test_sampler_bell() -> None:
-    # c = Circuit(2, 2)
-    # c.H(0)
-    # c.CX(0, 1)
-    c = Circuit(1)
+    n_shots = 1000
+    c = Circuit(2, 2)
     c.H(0)
-    # c.measure_all()
+    c.CX(0, 1)
+    c.measure_all()
     cu_backend = CuStateVecShotsBackend()
     c = cu_backend.get_compiled_circuit(c)
-    cu_handle = cu_backend.process_circuit(c, n_shots=100, seed=4)
-    counts = cu_backend.get_result(cu_handle).get_counts()
-    print(counts)
-    # assert res.get_shots().shape == (10, 2)
-    # assert res.get_counts() == {(0, 0): 5, (1, 1): 5}
+    cu_handle = cu_backend.process_circuit(c, n_shots=n_shots, seed=3)
+    cu_result = cu_backend.get_result(cu_handle)
+    assert cu_result.get_shots().shape == (n_shots, 2)
+    counts = cu_result.get_counts()
+    ratio = counts[(0, 0)] / counts[(1, 1)]
+
+    assert np.isclose(ratio, 1, atol=0.2)
 
 
 
