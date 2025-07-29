@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from pytket.circuit import BasisOrder, Circuit, Qubit, OpType
+from pytket.circuit import BasisOrder, Circuit, Qubit
 from pytket.extensions.custatevec.backends import (
     CuStateVecShotsBackend,
     CuStateVecStateBackend,
 )
-from pytket.extensions.qiskit.backends.aer import AerBackend, AerStateBackend
+from pytket.extensions.qiskit.backends.aer import AerStateBackend
 from pytket.extensions.qulacs.backends import QulacsBackend
 from pytket.pauli import Pauli, QubitPauliString
 from pytket.utils import get_operator_expectation_value
@@ -217,7 +217,7 @@ def test_custatevecstate_expectation_value_vs_aer_and_qulacs(
     # 2. Using pytket's default get_operator_expectation_value function with the non-compiled circuit
     # or add circuit.replace_implicit_wire_swaps() in case one wants to use the compiled circuit.
 
-    # We defined a backend-specific get_operator_expectation_value method here 
+    # We defined a backend-specific get_operator_expectation_value method here
     # to take advantage of CuStateVec's functionalities.
 
     assert np.allclose(operator.state_expectation(state), cu_expectation)
@@ -275,16 +275,42 @@ def test_implicit_perm() -> None:
 @pytest.mark.parametrize(
     "sampler_circuit_fixture, operator_fixture",
     [
-        ("bell_circuit", "bell_operator"),
-        ("three_qubit_ghz_circuit", "ghz_operator"),
-        ("four_qubit_superposition_circuit", "superposition_operator"),
-        ("two_qubit_entangling_circuit", "entangling_operator"),
+        ("test_circuit", "two_qubit_operator"),
+        ("bell_circuit", "two_qubit_operator"),
+        ("three_qubit_ghz_circuit", "three_qubit_operator"),
+        ("four_qubit_superposition_circuit", "four_qubit_operator"),
+        ("single_qubit_clifford_circuit", "two_qubit_operator"),
+        ("single_qubit_non_clifford_circuit", "two_qubit_operator"),
+        ("two_qubit_entangling_circuit", "two_qubit_operator"),
+        ("global_phase_circuit", "single_qubit_operator"),
+        ("q1_empty", "single_qubit_operator"),
+        ("q5_empty", "three_qubit_operator"),
+        ("q8_empty", "four_qubit_operator"),
+        ("q1_h0rz", "single_qubit_operator"),
+        ("q2_x0", "two_qubit_operator"),
+        ("q2_x1", "two_qubit_operator"),
+        ("q2_v0", "two_qubit_operator"),
+        ("q2_x0cx01", "two_qubit_operator"),
+        ("q2_x1cx10x1", "two_qubit_operator"),
+        ("q2_x0cx01cx10", "two_qubit_operator"),
+        ("q2_v0cx01cx10", "two_qubit_operator"),
+        # ("q2_hadamard_test", "two_qubit_operator"), #TODO: Add CrX gate
+        ("q2_lcu1", "two_qubit_operator"),
+        ("q2_lcu2", "two_qubit_operator"),
+        ("q2_lcu3", "two_qubit_operator"),
+        ("q3_v0cx02", "three_qubit_operator"),
+        ("q3_cx01cz12x1rx0", "three_qubit_operator"),
+        ("q4_multicontrols", "four_qubit_operator"),
+        # ("q4_with_creates", "four_qubit_operator"), #TODO: Add TK2 gate
+        # ("q5_h0s1rz2ry3tk4tk13", "three_qubit_operator"), #TODO: Add TK2 gate
+        ("q8_x0h2v5z6", "four_qubit_operator"),
+        ("q5_line_circ_30_layers", "three_qubit_operator"),
     ],
 )
-def test_custatevecshots_expectation_value_vs_aer_and_qulacs(
+def test_custatevecshots_expectation_value_vs_qulacs(
     sampler_circuit_fixture: str, operator_fixture: str, request: pytest.FixtureRequest,
 ) -> None:
-    """Test the CuStateVecShotsBackend against AerState and Qulacs Backends for various quantum circuits.
+    """Test the CuStateVecShotsBackend against Qulacs Backends for various quantum circuits.
 
     Args:
         sampler_circuit_fixture: The fixture name for the quantum circuit to test.
@@ -306,12 +332,6 @@ def test_custatevecshots_expectation_value_vs_aer_and_qulacs(
     cu_backend = CuStateVecShotsBackend()
     cu_expectation = get_operator_expectation_value(circuit, operator, cu_backend, n_shots)
 
-    # cu_expectation2 = get_operator_expectation_value(circuit, operator, CuStateVecStateBackend())
-    # AerState expectation value
-    # aer_backend = AerBackend()
-    # aer_expectation = get_operator_expectation_value(circuit, operator, aer_backend, n_shots)
-    # assert np.isclose(cu_expectation, aer_expectation, atol=0.1)
-
     # Qulacs expectation value
     qulacs_backend = QulacsBackend()
     qulacs_expectation = get_operator_expectation_value(circuit, operator, qulacs_backend, n_shots)
@@ -319,6 +339,7 @@ def test_custatevecshots_expectation_value_vs_aer_and_qulacs(
     assert np.isclose(cu_expectation, qulacs_expectation, atol=0.1)
 
 def test_sampler_bell() -> None:
+    """Test the CuStateVecShotsBackend for a Bell state circuit with sampling."""
     n_shots = 1000
     c = Circuit(2, 2)
     c.H(0)
@@ -329,12 +350,13 @@ def test_sampler_bell() -> None:
     cu_handle = cu_backend.process_circuit(c, n_shots=n_shots, seed=3)
     cu_result = cu_backend.get_result(cu_handle)
     assert cu_result.get_shots().shape == (n_shots, 2)
-    
+
     counts = cu_result.get_counts()
     ratio = counts[(0, 0)] / counts[(1, 1)]
     assert np.isclose(ratio, 1, atol=0.2)
 
 def test_sampler_basisorder() -> None:
+    """Test the CuStateVecShotsBackend for basis order consistency in sampling."""
     c = Circuit(2, 2)
     c.X(1)
     c.measure_all()
@@ -345,6 +367,7 @@ def test_sampler_basisorder() -> None:
     assert res.get_counts(basis=BasisOrder.dlo) == {(1, 0): 10}
 
 def test_sampler_expectation_value() -> None:
+    """Test the CuStateVecShotsBackend for expectation value calculation with sampling."""
     c = Circuit(2)
     c.H(0)
     c.CX(0, 1)
@@ -354,11 +377,11 @@ def test_sampler_expectation_value() -> None:
             QubitPauliString({Qubit(0): Pauli.X, Qubit(1): Pauli.X}): 0.3,
             QubitPauliString({Qubit(0): Pauli.Z, Qubit(1): Pauli.Y}): 0.8j,
             QubitPauliString({Qubit(0): Pauli.Y}): -0.4j,
-        }
+        },
     )
     b = CuStateVecShotsBackend()
     c = b.get_compiled_circuit(c)
     expectation = get_operator_expectation_value(c, op, b, n_shots=2000, seed=0)
     assert (np.real(expectation), np.imag(expectation)) == pytest.approx(
-        (1.3, 0.0), abs=0.1
+        (1.3, 0.0), abs=0.1,
     )

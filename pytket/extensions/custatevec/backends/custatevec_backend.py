@@ -16,14 +16,15 @@
 
 from abc import abstractmethod
 from collections.abc import Sequence
-from collections import Counter
 from uuid import uuid4
 
 import cupy as cp
+import cuquantum.custatevec as cusv
 import numpy as np
 from cuquantum import cudaDataType
+from cuquantum.bindings.custatevec import SamplerOutput
 
-from pytket._tket.circuit import Circuit, OpType
+from pytket._tket.circuit import Circuit
 from pytket.backends.backend import Backend
 from pytket.backends.backend_exceptions import CircuitNotRunError
 from pytket.backends.backendinfo import BackendInfo
@@ -36,16 +37,16 @@ from pytket.extensions.custatevec.custatevec import (
     run_circuit,
 )
 from pytket.extensions.custatevec.handle import CuStateVecHandle
-from pytket.passes import (  # type: ignore
+from pytket.passes import (
     BasePass,
-    CustomPass,  # type: ignore
-    DecomposeBoxes,  # type: ignore
-    FullPeepholeOptimise,  # type: ignore
+    CustomPass,
+    DecomposeBoxes,
+    FullPeepholeOptimise,
     RemoveRedundancies,
     SequencePass,
     SynthesiseTket,
 )
-from pytket.predicates import (  # type: ignore
+from pytket.predicates import (
     NoBarriersPredicate,
     NoClassicalControlPredicate,
     NoMidMeasurePredicate,
@@ -53,9 +54,10 @@ from pytket.predicates import (  # type: ignore
     Predicate,
 )
 from pytket.utils.operators import QubitPauliOperator
+from pytket.utils.outcomearray import OutcomeArray
 from pytket.utils.results import KwargTypes
 
-from .._metadata import __extension_name__, __extension_version__
+from .._metadata import __extension_name__, __extension_version__  # noqa: TID252
 
 
 class _CuStateVecBaseBackend(Backend):
@@ -90,8 +92,9 @@ class _CuStateVecBaseBackend(Backend):
         return preds
 
     def rebase_pass(self) -> BasePass:
-        """This method returns a dummy pass that does nothing, since there is
-        no need to rebase. It is provided by requirement of a child of Backend,
+        """This method returns a dummy pass that does nothing, since there is no need to rebase.
+
+        It is provided by requirement of a child of Backend,
         but it should not be included in the documentation.
         """
         return CustomPass(lambda circ: circ)  # Do nothing
@@ -146,7 +149,7 @@ class _CuStateVecBaseBackend(Backend):
         self,
         circuits: Circuit | Sequence[Circuit],
         n_shots: int | Sequence[int] | None = None,
-        valid_check: bool = True,
+        valid_check: bool = True,  # noqa: FBT001, FBT002
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
         """Submits circuits to the backend for running.
@@ -252,7 +255,7 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         computation.
 
         Args:
-            state_circuit (Circuit): The quantum circuit that prepares the desired
+            circuit (Circuit): The quantum circuit that prepares the desired
                 quantum state.
             operator (QubitPauliOperator): The operator for which the expectation value
                 is to be calculated.
@@ -307,13 +310,10 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
         valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
-        import cuquantum.custatevec as cusv
-        from cuquantum.bindings.custatevec import SamplerOutput
-        from pytket.utils.outcomearray import OutcomeArray
 
         # Ensure circuits is always a sequence
         circuits = [circuits] if isinstance(circuits, Circuit) else circuits
-            
+
         handle_list = []
         for circuit in circuits:
             with CuStateVecHandle() as libhandle:
@@ -325,12 +325,15 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 )
                 run_circuit(libhandle, circuit, sv)
 
-                # measured_qubits = [op.qubits[0] for op in measured_ops]
-                # measured_indices = [circuit.qubits.index(q) for q in measured_qubits]
-                
                 _qubit_idx_map = {q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))}
-                measured_indices = [_qubit_idx_map[x] for x in circuit.qubit_readout]
-                measured_indices.reverse()
+
+                # Identify each qubit with an index
+                # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
+                # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
+                # Now all operations by the cuStateVec library will be in the correct order.
+                measured_qubit_indices = [_qubit_idx_map[x] for x in circuit.qubit_readout]
+                measured_qubit_indices.reverse()
+
                 sampler_descriptor, size_t = cusv.sampler_create(
                     handle=libhandle.handle,
                     sv=sv.array.data.ptr,
@@ -339,7 +342,9 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                     n_max_shots=n_shots,
                 )
 
-                bit_strings = np.empty((n_shots, 1), dtype=np.int64)  # needs to be int64
+                bit_strings_int64 = np.empty((n_shots, 1), dtype=np.int64)  # needs to be int64
+
+                # Generate random numbers for sampling
                 rng = np.random.default_rng(seed)
                 randnums = rng.random(n_shots, dtype=np.float64).tolist()
 
@@ -353,50 +358,31 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 cusv.sampler_sample(
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
-                    bit_strings=bit_strings.ctypes.data,
-                    bit_ordering=measured_indices,
-                    bit_string_len=len(measured_indices),
+                    bit_strings=bit_strings_int64.ctypes.data,
+                    bit_ordering=measured_qubit_indices,
+                    bit_string_len=len(measured_qubit_indices),
                     randnums=randnums,
                     n_shots=n_shots,
                     output=SamplerOutput.RANDNUM_ORDER,
                 )
 
                 cusv.sampler_destroy(sampler_descriptor)
-                # print(sv.array)
+
             handle = ResultHandle(str(uuid4()))
+
             # Reformat bit_strings from list of 64-bit signed integer (memory-efficient
             # way for custatevec to save many shots) to list of binaries for OutcomeArray
-            bit_strings_binary = [format(s, f"0{len(measured_indices)}b") for s in bit_strings.flatten().tolist()]
-            bit_strings_reformat = [tuple(map(int, binary)) for binary in bit_strings_binary]
-            # bit_strings_binary = [
-            #     [int(bit) for bit in format(int(s), f"0{len(circuit.qubits)}b")]
-            #     for s in bit_strings.flatten()
-            # ]
-            #TODO: Len of qubits or cbits? Also, need to figure out the mapping if non-standard
-            # bit_strings_padded = np.zeros((n_shots, len(circuit.qubits)), dtype=np.uint8)
-            # Insert the values of bit_strings at their respective positions specified by
-            # bit_ordering into the padded array
-            # for i, bit_string in enumerate(bit_strings_binary):
-            #     for j in range(len(measured_indices)):
-            #         bit_strings_padded[i][measured_indices[j]] = bit_string[j]
+            bit_strings_binary = [format(s, f"0{len(measured_qubit_indices)}b") for s in bit_strings_int64.flatten().tolist()]
+            bit_strings_binary = [tuple(map(int, binary)) for binary in bit_strings_binary]
 
+            #TODO: What happens to the classical bits
             # In order to be able to use the BackendResult functionality,
             # we only pass the array of the statevector to BackendResult
             self._cache[handle] = {
                 "result": BackendResult(
                     state=cp.asnumpy(sv.array),
-                    shots=OutcomeArray.from_readouts(bit_strings_reformat),
-                )
+                    shots=OutcomeArray.from_readouts(bit_strings_binary),
+                ),
             }
             handle_list.append(handle)
         return handle_list
-
-def _check_all_unitary_or_measurements(circuit: Circuit) -> bool:
-    """Auxiliary function for custom predicate"""
-    try:
-        for cmd in circuit:
-            if cmd.op.type != OpType.Measure:
-                cmd.op.get_unitary()
-        return True
-    except:
-        return False
