@@ -1,4 +1,4 @@
-import math  # noqa: EXE002, D100
+import math  # noqa: D100
 
 import cupy as cp
 from cuquantum import cudaDataType

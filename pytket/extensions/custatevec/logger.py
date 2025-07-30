@@ -1,12 +1,11 @@
-import logging
+import logging  # noqa: D100
 from logging import Logger
-from typing import Optional
 
 
 def set_logger(
     logger_name: str,
     level: int = logging.WARNING,
-    file: Optional[str] = None,
+    file: str | None = None,
     fmt: str = "[%(asctime)s.%(msecs)03d] %(name)s (%(levelname)s) - %(message)s",
 ) -> Logger:
     """Initialises and configures a logger object.
@@ -25,10 +24,7 @@ def set_logger(
     logger.propagate = False
 
     handler: logging.StreamHandler
-    if file is None:
-        handler = logging.StreamHandler()
-    else:
-        handler = logging.FileHandler(file)
+    handler = logging.StreamHandler() if file is None else logging.FileHandler(file)
     handler.setLevel(level)
     formatter = logging.Formatter(fmt, datefmt="%H:%M:%S")
     handler.setFormatter(formatter)

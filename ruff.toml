@@ -61,6 +61,7 @@ lint.select = [
 
 ignore = [
     "TRY003",  # Avoid using bare `except` clauses.
+    "EM101",  # Logging statement uses `f-string` instead of lazy formatting.
     "EM102",  # String interpolation should be delayed to logging call.
     "PLR0913",  # Too many arguments in a function/method.
     "TD002",  # Missing `TODO` author.
@@ -71,6 +72,7 @@ ignore = [
     "N802",  # Function name should be lowercase.
     "FBT001",  # Boolean positional value in function call.
     "FBT002",  # Boolean default value in function definition.
+    "EXE002",  # Shebang is present but the file is not marked as executable.
 ]
 
 [lint.per-file-ignores]
@@ -81,8 +83,8 @@ ignore = [
 "tests/*" = [
     "INP001",  # File is part of an implicit namespace package. Add an `__init__.py`.
     "S101",  # Use of `assert` detected.
-    "D103",
-    "N806",
+    "D103",  # Missing docstring in public function.
+    "N806",  # Variable in function should be lowercase.
 ]
 
 [lint.pydocstyle]

@@ -1,4 +1,4 @@
-import warnings  # noqa: D100, EXE002
+import warnings  # noqa: D100
 from collections.abc import Sequence
 from typing import Any
 

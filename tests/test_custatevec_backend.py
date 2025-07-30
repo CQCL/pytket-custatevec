@@ -1,4 +1,4 @@
-import numpy as np  # noqa: D100, EXE002
+import numpy as np  # noqa: D100
 import pytest
 from cuquantum.bindings._utils import cudaDataType
 
@@ -47,7 +47,7 @@ def test_initial_statevector() -> None:
                 sv = initial_statevector(
                     libhandle,
                     n,
-                    state_name, # type: ignore  # noqa: PGH003
+                    state_name, # type: ignore[no-untyped-call]
                     dtype=cudaDataType.CUDA_C_64F,
                 )
                 generated_state = sv.array

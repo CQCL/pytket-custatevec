@@ -1,4 +1,4 @@
-# Copyright Quantinuum  # noqa: EXE002
+# Copyright Quantinuum
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -344,7 +344,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 measured_qubit_indices = [_qubit_idx_map[x] for x in circuit.qubit_readout]
                 measured_qubit_indices.reverse()
 
-                sampler_descriptor, size_t = cusv.sampler_create( # type: ignore # noqa: PGH003
+                sampler_descriptor, size_t = cusv.sampler_create( # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sv=sv.array.data.ptr,
                     sv_data_type=cudaDataType.CUDA_C_64F,
@@ -358,14 +358,14 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 rng = np.random.default_rng(seed)
                 randnums = rng.random(n_shots, dtype=np.float64).tolist()
 
-                cusv.sampler_preprocess( # type: ignore # noqa: PGH003
+                cusv.sampler_preprocess( # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     extra_workspace=0,
                     extra_workspace_size_in_bytes=0,
                 )
 
-                cusv.sampler_sample( # type: ignore # noqa: PGH003
+                cusv.sampler_sample( # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     bit_strings=bit_strings_int64.ctypes.data,
@@ -376,7 +376,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                     output=SamplerOutput.RANDNUM_ORDER,
                 )
 
-                cusv.sampler_destroy(sampler_descriptor) # type: ignore # noqa: PGH003
+                cusv.sampler_destroy(sampler_descriptor) # type: ignore[no-untyped-call]
 
             handle = ResultHandle(str(uuid4()))
 

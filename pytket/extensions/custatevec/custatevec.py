@@ -1,4 +1,4 @@
-# Copyright Quantinuum  # noqa: D100, EXE002
+# Copyright Quantinuum  # noqa: D100
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ def run_circuit(
     if type(_phase) is float:
         state.apply_phase(_phase)
     else:
-        raise NotImplementedError("Symbols not yet supported.")  # noqa: EM101
+        raise NotImplementedError("Symbols not yet supported.")
 
     # Identify each qubit with an index
     # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
@@ -152,7 +152,7 @@ def run_circuit(
     for com in commands:
         op = com.op
         if len(op.free_symbols()) > 0:
-            raise NotImplementedError("Symbolic circuits not yet supported")  # noqa: EM101
+            raise NotImplementedError("Symbolic circuits not yet supported")
         gate_name = op.get_name()
         qubits = [_qubit_idx_map[x] for x in com.qubits]
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
@@ -219,9 +219,9 @@ def compute_expectation(
         np.complex128: The expectation value of the operator on the state vector.
     """
     if not isinstance(operator, QubitPauliOperator):
-        raise TypeError("operator must be a QubitPauliOperator")  # noqa: EM101
+        raise TypeError("operator must be a QubitPauliOperator")
     if not isinstance(statevector, CuStateVector):
-        raise TypeError("statevector must be a CuStateVector")  # noqa: EM101
+        raise TypeError("statevector must be a CuStateVector")
 
     if matrix_dtype is None:
         matrix_dtype = cudaDataType.CUDA_C_64F

@@ -1,9 +1,9 @@
-from collections.abc import Sequence
+from collections.abc import Sequence  # noqa: D100
 
-import cuquantum.custatevec as cusv  # type: ignore
+import cuquantum.custatevec as cusv
 import numpy as np
 from cuquantum import ComputeType
-from cuquantum.custatevec import Pauli as cusvPauli
+from cuquantum.custatevec import Pauli as cusvPauli  # type: ignore[import-error]
 
 from pytket.circuit import OpType
 
@@ -110,11 +110,14 @@ def apply_matrix(
     )
 
 
-def pytket_paulis_to_custatevec_paulis(pauli_rotation_type: OpType, angle_pi: float) -> tuple[list[cusvPauli], float]:
+def pytket_paulis_to_custatevec_paulis(
+    pauli_rotation_type: OpType,
+    angle_pi: float,
+) -> tuple[list[cusvPauli], float]:
     """Map pytket OpType to cuStateVec Pauli and convert angle from multiples of π to radians.
 
     Args:
-        op_type (OpType): The pytket operation type (e.g., Rx, Ry, Rz).
+        pauli_rotation_type (OpType): The pytket operation type (e.g., Rx, Ry, Rz).
         angle_pi (float): The angle in multiples of π.
 
     Returns:
@@ -147,6 +150,27 @@ def apply_pauli_rotation(
     controls: Sequence[int] | int | None = None,
     control_bit_values: Sequence[int] | int | None = None,
 ) -> None:
+    """Apply a Pauli rotation to a statevector using cuStateVec.
+
+    Args:
+        handle (CuStateVecHandle): The cuStateVec handle for managing the
+            cuStateVec library context.
+        paulis (Sequence[cusvPauli]): The sequence of Pauli operators to apply.
+        statevector (CuStateVector): The statevector to which the Pauli rotation
+            will be applied.
+        angle (float): The rotation angle in radians.
+        targets (int | Sequence[int]): The target qubit(s) on which the
+            Pauli rotation will act.
+        controls (Sequence[int] | int | None, optional): The control qubit(s)
+            for the operation. If None, no control qubits are used. Defaults
+            to None.
+        control_bit_values (Sequence[int] | int | None, optional): The control
+            bit values corresponding to the control qubits. If None, no
+            control bit values are used. Defaults to None.
+
+    Returns:
+        None: This function modifies the statevector in place.
+    """
     targets = [targets] if targets is int else targets
     # IMPORTANT: Translate qubit order for cuStateVec.apply_pauli_rotation.
     # After relabling with _qubit_idx_map, cuStateVec.apply_pauli_rotation function still
