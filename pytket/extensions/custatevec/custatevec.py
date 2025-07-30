@@ -158,7 +158,6 @@ def run_circuit(
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
         controls, targets = qubits[:n_controls], qubits[n_controls:]
 
-        # TODO: Check if PauliExpBox should go there and what is does
         if op.type in (OpType.Rx, OpType.Ry, OpType.Rz):
             cusv_paulis, angle_radians = pytket_paulis_to_custatevec_paulis(
                 pauli_rotation_type=op.type,

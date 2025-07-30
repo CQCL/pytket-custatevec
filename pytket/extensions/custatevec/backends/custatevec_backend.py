@@ -36,6 +36,7 @@ from pytket.extensions.custatevec.custatevec import (
     initial_statevector,
     run_circuit,
 )
+from pytket.extensions.custatevec.gate_definitions import _control_to_gate_map, gate_list
 from pytket.extensions.custatevec.handle import CuStateVecHandle
 from pytket.passes import (
     BasePass,
@@ -190,12 +191,8 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             architecture=None,
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
-            # The only constraint to the gateset is that they must be unitary matrices
-            # or end-of-circuit measurements. These constraints are already specified
-            # in the required_predicates of the backend. The empty set for gateset is
-            # meant to be interpreted as "all gates".
-            # TODO: list all gates in a programmatic way?
-            gate_set=set(),
+            # All currently implemented gates including controlled gates
+            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()), # type: ignore[no-untyped-call]
             misc={"characterisation": None},
         )
 
@@ -220,18 +217,19 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         Returns:
             Results handle objects.
         """
-        # TODO Valid check and compilation pass
-
         # Ensure circuits is always a sequence
         circuits = [circuits] if isinstance(circuits, Circuit) else circuits
+
+        if valid_check:
+            self._check_all_circuits(circuits, nomeasure_warn=False)
 
         handle_list = []
         for circuit in circuits:
             with CuStateVecHandle() as libhandle:
                 sv = initial_statevector(
-                    libhandle,
-                    circuit.n_qubits,
-                    "zero",
+                    handle=libhandle,
+                    n_qubits=circuit.n_qubits,
+                    sv_type="zero",
                     dtype=cudaDataType.CUDA_C_64F,
                 )
                 run_circuit(libhandle, circuit, sv)
@@ -266,9 +264,9 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         """
         with CuStateVecHandle() as libhandle:
             sv = initial_statevector(
-                libhandle,
-                circuit.n_qubits,
-                "zero",
+                handle=libhandle,
+                n_qubits=circuit.n_qubits,
+                sv_type="zero",
                 dtype=cudaDataType.CUDA_C_64F,
             )
             run_circuit(libhandle, circuit, sv)
@@ -293,12 +291,8 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
             architecture=None,
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
-            # The only constraint to the gateset is that they must be unitary matrices
-            # or end-of-circuit measurements. These constraints are already specified
-            # in the required_predicates of the backend. The empty set for gateset is
-            # meant to be interpreted as "all gates".
-            # TODO: list all gates in a programmatic way?
-            gate_set=set(),
+            # All currently implemented gates including controlled gates
+            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()), # type: ignore[no-untyped-call]
             misc={"characterisation": None},
         )
 
@@ -324,13 +318,16 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
         # Ensure circuits is always a sequence
         circuits = [circuits] if isinstance(circuits, Circuit) else circuits
 
+        if valid_check:
+            self._check_all_circuits(circuits, nomeasure_warn=False)
+
         handle_list = []
         for circuit in circuits:
             with CuStateVecHandle() as libhandle:
                 sv = initial_statevector(
-                    libhandle,
-                    circuit.n_qubits,
-                    "zero",
+                    handle=libhandle,
+                    n_qubits=circuit.n_qubits,
+                    sv_type="zero",
                     dtype=cudaDataType.CUDA_C_64F,
                 )
                 run_circuit(libhandle, circuit, sv)

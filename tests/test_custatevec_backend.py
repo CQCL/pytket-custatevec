@@ -25,6 +25,14 @@ def test_initial_statevector() -> None:
     """Test the initial_statevector function for all possible types and different qubit numbers.
 
     Compare against the expected state vector.
+
+    Notes:
+        - Since the statevectors/amplitude arrays of all possible initial states {zero, uniform, ghz, w}
+        are "closed under reversal", i.e. if one reverses any computational basis state
+        one gets another computational basis state also present in the statevector,
+        all resulting amplitude arrays will be identical for little endian and big endian order.
+        For example states like |ψ⟩= 1/√2(|00⟩+|11⟩) always correspond to [1/√2, 0, 0, 1/√2].
+
     """
     initial_states = {
         "zero": lambda n: np.eye(1, 2**n, 0, dtype=np.complex128).ravel(),
