@@ -1,12 +1,15 @@
+import numpy as np  # noqa: D100, EXE002
 import pytest
-import numpy as np
-from pytket.circuit import Circuit, Qubit
+
+from pytket._tket.circuit import Circuit
+from pytket.circuit import Qubit
 from pytket.pauli import Pauli, QubitPauliString
 from pytket.utils.operators import QubitPauliOperator
 
+
 # Group 1: Single-Qubit Clifford Gates
 @pytest.fixture
-def single_qubit_clifford_circuit():
+def single_qubit_clifford_circuit() -> Circuit:
     c = Circuit(3, 3)
     c.X(0)
     c.Y(1)
@@ -18,7 +21,7 @@ def single_qubit_clifford_circuit():
     return c
 
 @pytest.fixture
-def bell_circuit():
+def bell_circuit() -> tuple[Circuit, np.ndarray]:
     c = Circuit(2, 2)
     c.H(0)
     c.CX(0, 1)
@@ -26,7 +29,7 @@ def bell_circuit():
     return c, expected
 
 @pytest.fixture
-def test_circuit():
+def test_circuit() -> Circuit:
     c = Circuit(3, 3)
     c.X(2)
     c.H(0)
@@ -34,7 +37,7 @@ def test_circuit():
     return c
 
 @pytest.fixture
-def three_qubit_ghz_circuit():
+def three_qubit_ghz_circuit() -> tuple[Circuit, np.ndarray]:
     c = Circuit(3, 3)
     c.H(0)
     c.CX(0, 1)
@@ -43,7 +46,7 @@ def three_qubit_ghz_circuit():
     return c, expected
 
 @pytest.fixture
-def four_qubit_superposition_circuit():
+def four_qubit_superposition_circuit() -> tuple[Circuit, np.ndarray]:
     c = Circuit(4, 4)
     for i in range(4):
         c.H(i)
@@ -52,7 +55,7 @@ def four_qubit_superposition_circuit():
 
 # Group 2: Single-Qubit Non-Clifford or Parameterized Gates
 @pytest.fixture
-def single_qubit_non_clifford_circuit():
+def single_qubit_non_clifford_circuit() -> Circuit:
     c = Circuit(3, 3)
     c.T(0)
     c.Rx(0.5, 1)
@@ -66,7 +69,7 @@ def single_qubit_non_clifford_circuit():
 
 # Group 3: Two-Qubit Entangling Gates
 @pytest.fixture
-def two_qubit_entangling_circuit():
+def two_qubit_entangling_circuit() -> Circuit:
     c = Circuit(4, 4)
     c.ECR(0, 1)
     c.SWAP(1, 2)
@@ -80,7 +83,7 @@ def two_qubit_entangling_circuit():
 
 # Group 4: Miscellaneous Circuits
 @pytest.fixture
-def global_phase_circuit():
+def global_phase_circuit() -> tuple[Circuit, np.ndarray]:
     c = Circuit(1, 1)
     c.add_phase(0.5)
     expected = np.asarray([1, 0]) * np.exp(1j * np.pi * 0.5)
@@ -102,7 +105,7 @@ def random_line_circuit(n_qubits: int, layers: int) -> Circuit:
         ]
         # Direction of each CX gate is random
         for pair in qubit_pairs:
-            if np.random.rand() > 0.5:  # noqa: NPY002
+            if np.random.rand() > 0.5:  # noqa: NPY002, PLR2004
                 pair = [pair[1], pair[0]]  # noqa: PLW2901
 
         for pair in qubit_pairs:
@@ -253,7 +256,7 @@ def q4_lcu1() -> Circuit:
     circuit.Ry(0.12, 0).Ry(0.56, 1)
     circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
     circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
-        0
+        0,
     ).X(1)
     circuit.Ry(-0.12, 0).Ry(-0.56, 1)
     return circuit
@@ -267,7 +270,7 @@ def q4_lcu1_parameterised() -> Circuit:
     circuit.Ry(0.12, 0).Ry(a, 1)
     circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
     circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
-        0
+        0,
     ).X(1)
     circuit.Ry(-b, 0).Ry(-c, 1)
     return circuit
@@ -390,8 +393,8 @@ def q3_toffoli_box_with_implicit_swaps() -> Circuit:
     circ = Circuit(3)
 
     # Create the circuit
-    circ.add_toffolibox(ToffoliBox(perm), [Qubit(0), Qubit(1)])  # type: ignore
-    circ.add_toffolibox(ToffoliBox(perm), [Qubit(1), Qubit(2)])  # type: ignore
+    circ.add_toffolibox(ToffoliBox(perm), [Qubit(0), Qubit(1)])
+    circ.add_toffolibox(ToffoliBox(perm), [Qubit(1), Qubit(2)])
 
     DecomposeBoxes().apply(circ)
     CnXPairwiseDecomposition().apply(circ)
@@ -407,16 +410,16 @@ def q3_toffoli_box_with_implicit_swaps() -> Circuit:
 # Operator Fixtures
 
 @pytest.fixture
-def single_qubit_operator():
+def single_qubit_operator() -> QubitPauliOperator:
     """Fixture for a sample operator to test with single-qubit circuits."""
     return QubitPauliOperator(
         {
             QubitPauliString({Qubit(0): Pauli.X}): 0.4,
-        }
+        },
     )
 
 @pytest.fixture
-def two_qubit_operator():
+def two_qubit_operator() -> QubitPauliOperator:
     """Fixture for a sample operator to test with the Bell circuit."""
     return QubitPauliOperator(
         {
@@ -424,25 +427,25 @@ def two_qubit_operator():
             QubitPauliString({Qubit(0): Pauli.X, Qubit(1): Pauli.X}): 1.0,
             QubitPauliString({Qubit(0): Pauli.Z, Qubit(1): Pauli.Y}): 0.8j,
             QubitPauliString({Qubit(0): Pauli.Y}): -0.4j,
-        }
+        },
     )
 
 @pytest.fixture
-def three_qubit_operator():
+def three_qubit_operator() -> QubitPauliOperator:
     """Fixture for an operator to test with the GHZ circuit."""
     return QubitPauliOperator(
         {
             QubitPauliString({Qubit(0): Pauli.Z, Qubit(1): Pauli.Z, Qubit(2): Pauli.Z}): 1.0,
             QubitPauliString({Qubit(0): Pauli.X, Qubit(1): Pauli.X, Qubit(2): Pauli.X}): 0.5,
-        }
+        },
     )
 
 @pytest.fixture
-def four_qubit_operator():
+def four_qubit_operator() -> QubitPauliOperator:
     """Fixture for an operator to test with the entangling circuit."""
     return QubitPauliOperator(
         {
             QubitPauliString({Qubit(0): Pauli.X, Qubit(1): Pauli.X}): 0.8,
             QubitPauliString({Qubit(2): Pauli.Y, Qubit(3): Pauli.Y}): 0.6,
-        }
+        },
     )

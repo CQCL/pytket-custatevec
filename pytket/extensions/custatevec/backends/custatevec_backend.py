@@ -1,4 +1,4 @@
-# Copyright Quantinuum
+# Copyright Quantinuum  # noqa: EXE002
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ class _CuStateVecBaseBackend(Backend):
             NoMidMeasurePredicate(),
             NoBarriersPredicate(),
         ]
-        return preds
+        return preds  # noqa: RET504
 
     def rebase_pass(self) -> BasePass:
         """This method returns a dummy pass that does nothing, since there is no need to rebase.
@@ -116,7 +116,7 @@ class _CuStateVecBaseBackend(Backend):
         Returns:
             Compilation pass guaranteeing required predicates.
         """
-        assert optimisation_level in range(3)
+        assert optimisation_level in range(3)  # noqa: S101
         seq = [
             DecomposeBoxes(),
             RemoveRedundancies(),
@@ -126,7 +126,7 @@ class _CuStateVecBaseBackend(Backend):
         # benchmarked what's their effect on the simulation time.
         if optimisation_level == 1:
             seq.append(SynthesiseTket())  # Optional fast optimisation
-        elif optimisation_level == 2:
+        elif optimisation_level == 2:  # noqa: PLR2004
             seq.append(FullPeepholeOptimise())  # Optional heavy optimisation
         seq.append(self.rebase_pass())  # Map to target gate set
         return SequencePass(seq)
@@ -145,11 +145,11 @@ class _CuStateVecBaseBackend(Backend):
         raise CircuitNotRunError(handle)
 
     @abstractmethod
-    def process_circuits(
+    def process_circuits( # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
         n_shots: int | Sequence[int] | None = None,
-        valid_check: bool = True,  # noqa: FBT001, FBT002
+        valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
         """Submits circuits to the backend for running.
@@ -199,12 +199,12 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             misc={"characterisation": None},
         )
 
-    def process_circuits(
+    def process_circuits( # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
-        n_shots: int | Sequence[int] | None = None,
+        n_shots: int | Sequence[int] | None = None,  # noqa: ARG002
         valid_check: bool = True,
-        **kwargs: KwargTypes,
+        **kwargs: KwargTypes,  # noqa: ARG002
     ) -> list[ResultHandle]:
         """Submits circuits to the backend for running.
 
@@ -263,7 +263,7 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         Returns:
             np.float64: The computed expectation value of the operator with respect to
             the quantum state.
-        """  # noqa: E501
+        """
         with CuStateVecHandle() as libhandle:
             sv = initial_statevector(
                 libhandle,
@@ -302,15 +302,25 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
             misc={"characterisation": None},
         )
 
-    def process_circuits(
+    def process_circuits( # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
-        n_shots: int | Sequence[int],
+        n_shots: int,
         seed: int | None = 4,
         valid_check: bool = True,
-        **kwargs: KwargTypes,
+        **kwargs: KwargTypes,  # noqa: ARG002
     ) -> list[ResultHandle]:
+        """Submits circuits to the backend for running and returns result handles.
 
+        Args:
+            circuits: List of circuits to be submitted.
+            n_shots: Number of shots for shot-based calculation.
+            seed: Seed for random number generation.
+            valid_check: Whether to check for circuit correctness.
+
+        Returns:
+            List of result handles for the submitted circuits.
+        """
         # Ensure circuits is always a sequence
         circuits = [circuits] if isinstance(circuits, Circuit) else circuits
 
@@ -334,7 +344,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 measured_qubit_indices = [_qubit_idx_map[x] for x in circuit.qubit_readout]
                 measured_qubit_indices.reverse()
 
-                sampler_descriptor, size_t = cusv.sampler_create(
+                sampler_descriptor, size_t = cusv.sampler_create( # type: ignore # noqa: PGH003
                     handle=libhandle.handle,
                     sv=sv.array.data.ptr,
                     sv_data_type=cudaDataType.CUDA_C_64F,
@@ -348,14 +358,14 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 rng = np.random.default_rng(seed)
                 randnums = rng.random(n_shots, dtype=np.float64).tolist()
 
-                cusv.sampler_preprocess(
+                cusv.sampler_preprocess( # type: ignore # noqa: PGH003
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     extra_workspace=0,
                     extra_workspace_size_in_bytes=0,
                 )
 
-                cusv.sampler_sample(
+                cusv.sampler_sample( # type: ignore # noqa: PGH003
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     bit_strings=bit_strings_int64.ctypes.data,
@@ -366,7 +376,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                     output=SamplerOutput.RANDNUM_ORDER,
                 )
 
-                cusv.sampler_destroy(sampler_descriptor)
+                cusv.sampler_destroy(sampler_descriptor) # type: ignore # noqa: PGH003
 
             handle = ResultHandle(str(uuid4()))
 

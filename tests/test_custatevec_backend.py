@@ -1,28 +1,31 @@
-import numpy as np
+import numpy as np  # noqa: D100, EXE002
 import pytest
+from cuquantum.bindings._utils import cudaDataType
 
-from pytket.circuit import BasisOrder, Circuit, Qubit
+from pytket._tket.circuit import Circuit
+from pytket.circuit import BasisOrder, Qubit
 from pytket.extensions.custatevec.backends import (
     CuStateVecShotsBackend,
     CuStateVecStateBackend,
 )
+from pytket.extensions.custatevec.custatevec import initial_statevector
+from pytket.extensions.custatevec.handle import CuStateVecHandle
 from pytket.extensions.qiskit.backends.aer import AerStateBackend
-from pytket.extensions.qulacs.backends import QulacsBackend
+from pytket.extensions.qulacs.backends.qulacs_backend import QulacsBackend
+from pytket.passes import CliffordSimp
 from pytket.pauli import Pauli, QubitPauliString
-from pytket.utils import get_operator_expectation_value
+from pytket.utils.expectations import get_operator_expectation_value
 from pytket.utils.operators import QubitPauliOperator
 
 # =====================================================
 # === TESTS FOR STATEVECTOR AND SHOT-BASED BACKENDS ===
 # =====================================================
 
-def test_initial_statevector():
-    """Test the initial_statevector function for all possible types and different qubit numbers and compare against the expected state vector."""
-    from cuquantum.bindings._utils import cudaDataType
+def test_initial_statevector() -> None:
+    """Test the initial_statevector function for all possible types and different qubit numbers.
 
-    from pytket.extensions.custatevec.custatevec import initial_statevector
-    from pytket.extensions.custatevec.handle import CuStateVecHandle
-
+    Compare against the expected state vector.
+    """
     initial_states = {
         "zero": lambda n: np.eye(1, 2**n, 0, dtype=np.complex128).ravel(),
         "uniform": lambda n: np.full(2**n, 1 / np.sqrt(2**n), dtype=np.complex128),
@@ -44,7 +47,7 @@ def test_initial_statevector():
                 sv = initial_statevector(
                     libhandle,
                     n,
-                    state_name,
+                    state_name, # type: ignore  # noqa: PGH003
                     dtype=cudaDataType.CUDA_C_64F,
                 )
                 generated_state = sv.array
@@ -149,7 +152,7 @@ def test_custatevecstate_state_vector_vs_aer_and_qulacs(
         assert np.allclose(cu_result, pytket_result)
 
 @pytest.mark.parametrize(
-    "statevector_circuit_fixture, operator_fixture",
+    ("statevector_circuit_fixture", "operator_fixture"),
     [
         ("test_circuit", "two_qubit_operator"),
         ("bell_circuit", "two_qubit_operator"),
@@ -197,10 +200,7 @@ def test_custatevecstate_expectation_value_vs_aer_and_qulacs(
         None
     """
     circuit_data = request.getfixturevalue(statevector_circuit_fixture)
-    if isinstance(circuit_data, tuple):
-        circuit = circuit_data[0]  # Extract the Circuit object
-    else:
-        circuit = circuit_data
+    circuit = circuit_data[0] if isinstance(circuit_data, tuple) else circuit_data
 
     operator = request.getfixturevalue(operator_fixture)
 
@@ -250,7 +250,6 @@ def test_basisorder() -> None:
 
 def test_implicit_perm() -> None:
     """Test the implicit qubit permutation in CuStateVecStateBackend."""
-    from pytket.passes import CliffordSimp
     c = Circuit(2)
     c.CX(0, 1)
     c.CX(1, 0)
@@ -273,7 +272,7 @@ def test_implicit_perm() -> None:
 # ====================================
 
 @pytest.mark.parametrize(
-    "sampler_circuit_fixture, operator_fixture",
+    ("sampler_circuit_fixture", "operator_fixture"),
     [
         ("test_circuit", "two_qubit_operator"),
         ("bell_circuit", "two_qubit_operator"),
@@ -321,10 +320,7 @@ def test_custatevecshots_expectation_value_vs_qulacs(
         None
     """
     circuit_data = request.getfixturevalue(sampler_circuit_fixture)
-    if isinstance(circuit_data, tuple):
-        circuit = circuit_data[0]  # Extract the Circuit object
-    else:
-        circuit = circuit_data
+    circuit = circuit_data[0] if isinstance(circuit_data, tuple) else circuit_data
 
     operator = request.getfixturevalue(operator_fixture)
     n_shots = 1000000

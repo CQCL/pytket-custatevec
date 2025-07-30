@@ -67,14 +67,7 @@ reference.
 
 #### Formatting
 
-All code should be formatted using
-[black](https://black.readthedocs.io/en/stable/), with default options. This is
-checked on the CI. The CI is currently using version 22.12.0. You can install it
-(as well as pylint as described below) by running from the root package folder:
-
-```shell
-pip install -r lint-requirements.txt
-```
+All code should be formatted using [ruff](https://pypi.org/project/ruff/), with default options.
 
 #### Type annotation
 
