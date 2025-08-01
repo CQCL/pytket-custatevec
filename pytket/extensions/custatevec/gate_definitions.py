@@ -1,15 +1,16 @@
-import warnings
+import warnings  # noqa: D100
 from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
 from cuquantum.bindings._utils import cudaDataType
 from numpy.typing import DTypeLike, NDArray
+from sympy import Expr
 
 try:
-    import cupy as cp  # type: ignore
+    import cupy as cp
 except ImportError:
-    warnings.warn("local settings failed to import cupy", ImportWarning)
+    warnings.warn("local settings failed to import cupy", ImportWarning, stacklevel=2)
 
 from pytket.extensions.custatevec.gate_classes import (
     CuStateVecMatrix,
@@ -21,7 +22,7 @@ from .dtype import cuquantum_to_np_dtype
 
 _I = np.eye(2)
 
-I = UnparameterizedGate("I", _I)
+I = UnparameterizedGate("I", _I)  # noqa: E741
 
 _0 = np.zeros((2, 2))
 
@@ -278,7 +279,9 @@ def get_uncontrolled_gate(name: str) -> tuple[str, int]:
 
 
 def get_gate_matrix(
-    gate_name: str, parameters: Sequence[float], cuda_dtype: cudaDataType,
+    gate_name: str,
+    parameters: Sequence[Expr | float],
+    cuda_dtype: cudaDataType,
 ) -> CuStateVecMatrix:
     """Retrieve the matrix representation of a quantum gate.
 

@@ -1,4 +1,4 @@
-import numpy as np  # noqa: EXE002, D100
+import numpy as np  # noqa: D100
 from cuquantum.bindings._utils import cudaDataType
 from numpy.typing import DTypeLike
 
