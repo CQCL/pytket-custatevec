@@ -60,30 +60,24 @@ def apply_matrix(
         None: This function modifies the statevector in place.
 
     Notes:
-        - The supplied initial statevector is generated with cuStateVec and therefore follows little-endian.
         - cuStateVec expects the target qubits to be specified in little-endian
           order. This function reverses the order of the targets to comply with
           this requirement.
         - The matrix should only act on the target qubits. cuStateVec internally
           handles embedding the matrix into the full system based on the
           specified target qubits.
+        - Since we always set a device memory handler through the CuStateVecHandle,
+          the extraWorkspace can be set to null, and the extraWorkspaceSizeInBytes can be set to 0.
     """
     targets = [targets] if targets is int else targets
-    # IMPORTANT: Translate qubit order for cuStateVec.apply_matrix.
-    # After relabling with _qubit_idx_map, cuStateVec.apply_matrix function still
+    # IMPORTANT: After relabling with _qubit_idx_map, cuStateVec.apply_matrix function still
     # requires its list of target indices to be in the LSB-to-MSB order.
     # This reversal adapts our MSB-first list to the LSB-first format cuStateVec requires.
-    targets.reverse() #TODO: Check if this is still needed after compilation - is there ever more than 1 qubit in there?
-    if controls is None:
-        controls = []
-    else:
-        controls = [controls] if controls is int else controls
-    if control_bit_values is None:
-        control_bit_values = []
-    else:
-        control_bit_values = (
-            [control_bit_values] if control_bit_values is int else control_bit_values
-        )
+    # Example: For a 4-qubit SWAP(q[2], q[3]), we identify the target qubit indices according to _qubit_idx_map with [1, 0].
+    # cuStateVec.apply_matrix requires this to be reversed to [0, 1].
+    targets.reverse()  # type: ignore[union-attr]
+    controls = [] if controls is None else [controls] if controls is int else controls
+    control_bit_values = [] if control_bit_values is None else [control_bit_values] if control_bit_values is int else control_bit_values
 
     # Note: cuStateVec expects the matrix to act only on the target qubits.
     # For example, even in a multi-qubit system (e.g., 2 qubits),
@@ -172,21 +166,14 @@ def apply_pauli_rotation(
         None: This function modifies the statevector in place.
     """
     targets = [targets] if targets is int else targets
-    # IMPORTANT: Translate qubit order for cuStateVec.apply_pauli_rotation.
-    # After relabling with _qubit_idx_map, cuStateVec.apply_pauli_rotation function still
+    # IMPORTANT: After relabling with _qubit_idx_map, cuStateVec.apply_pauli_rotation function still
     # requires its list of target indices to be in the LSB-to-MSB order.
     # This reversal adapts our MSB-first list to the LSB-first format cuStateVec requires.
+    # Example: For a 4-qubit SWAP(q[2], q[3]), we identify the target qubit indices according to _qubit_idx_map with [1, 0].
+    # cuStateVec.apply_pauli_rotation requires this to be reversed to [0, 1].
     targets.reverse()
-    if controls is None:
-        controls = []
-    else:
-        controls = [controls] if controls is int else controls
-    if control_bit_values is None:
-        control_bit_values = []
-    else:
-        control_bit_values = (
-            [control_bit_values] if control_bit_values is int else control_bit_values
-        )
+    controls = [] if controls is None else [controls] if controls is int else controls
+    control_bit_values = [] if control_bit_values is None else [control_bit_values] if control_bit_values is int else control_bit_values
 
     cusv.apply_pauli_rotation(
         handle=handle.handle,

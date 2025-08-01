@@ -108,7 +108,6 @@ def run_circuit(
         ValueError: If the initial_state is not a valid string or CuStateVector.
         NotImplementedError: If the circuit contains symbolic parameters or unsupported operations.
     """
-    state: CuStateVector
     if isinstance(initial_state, str):
         if initial_state in {"zero", "uniform", "ghz", "w"}:
             state = initial_statevector(
@@ -131,12 +130,11 @@ def run_circuit(
     else:
         raise NotImplementedError("Symbols not yet supported.")
 
-    # Identify each qubit with an index
-    # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
-    # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
-    # Now all operations by the cuStateVec library will be in the correct order.
-    # Reordering needs to be done inside the function since get_operator_expectation_value
-    # just calls the run_circuit function directly.
+    # IMPORTANT: _qubit_idx_map matches cuStateVec's little-endian convention
+    # (qubit 0 = least significant) with pytket's big-endian (qubit 0 = most significant).
+    # Now all operations by the cuStateVec library will act on the correct control and target qubits.
+    # Note: Any reordering needs to be done inside run_circuit
+    # since get_operator_expectation_value just calls the run_circuit function directly.
     _qubit_idx_map: dict[Qubit, int] = {
         q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
     }
@@ -154,8 +152,10 @@ def run_circuit(
         if len(op.free_symbols()) > 0:
             raise NotImplementedError("Symbolic circuits not yet supported")
         gate_name = op.get_name()
+        # Get the relevant, relabeled qubit indices for the operation
         qubits = [_qubit_idx_map[x] for x in com.qubits]
         uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
+        # Since control qubits come before target qubits, we split qubits at n_controls.
         controls, targets = qubits[:n_controls], qubits[n_controls:]
 
         if op.type in (OpType.Rx, OpType.Ry, OpType.Rz):
@@ -188,8 +188,8 @@ def run_circuit(
                 targets=targets,
                 controls=controls,
                 control_bit_values=[1]
-                * n_controls,  # 1 means the gate is applied only when the control qubit is in state 1
-                adjoint=adjoint,
+                * n_controls,  # what value does each of the control qubits need to have to activate the gate
+                adjoint=adjoint, # control_bit_values = [1,...,1] means each gate is applied only when the control qubit is in state 1
             )
     handle.stream.synchronize()
 
@@ -237,6 +237,7 @@ def compute_expectation(
         q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))
     }
     # Match cuStateVec's little-endian convention: Sort basis bits in LSB-to-MSB order
+    # Basis bits: indices of the qubits you want the operator to act upon
     basis_bits = [_qubit_idx_map[x] for x in operator.all_qubits]
 
     expectation_value = np.empty(1, dtype=np.complex128)
@@ -251,7 +252,7 @@ def compute_expectation(
             expectation_data_type=cudaDataType.CUDA_C_64F,
             matrix=matrix.matrix.data.ptr,
             matrix_data_type=matrix.cuda_dtype,
-            layout=cusv.MatrixLayout.COL,  # COL -> correct phase for complex exp. val.
+            layout=cusv.MatrixLayout.COL,  # COL -> correct phase for complex exp. val. and correct exp. values
             basis_bits=basis_bits,
             n_basis_bits=len(basis_bits),
             compute_type=ComputeType.COMPUTE_DEFAULT,

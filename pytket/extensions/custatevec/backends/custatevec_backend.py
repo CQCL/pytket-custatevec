@@ -16,6 +16,7 @@
 
 from abc import abstractmethod
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import cupy as cp
@@ -59,6 +60,9 @@ from pytket.utils.outcomearray import OutcomeArray
 from pytket.utils.results import KwargTypes
 
 from .._metadata import __extension_name__, __extension_version__  # noqa: TID252
+
+if TYPE_CHECKING:
+    from pytket.circuit import Qubit
 
 
 class _CuStateVecBaseBackend(Backend):
@@ -146,7 +150,7 @@ class _CuStateVecBaseBackend(Backend):
         raise CircuitNotRunError(handle)
 
     @abstractmethod
-    def process_circuits( # noqa: D417
+    def process_circuits(  # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
         n_shots: int | Sequence[int] | None = None,
@@ -192,11 +196,11 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
             # All currently implemented gates including controlled gates
-            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()), # type: ignore[no-untyped-call]
+            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()),  # type: ignore[no-untyped-call]
             misc={"characterisation": None},
         )
 
-    def process_circuits( # noqa: D417
+    def process_circuits(  # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
         n_shots: int | Sequence[int] | None = None,  # noqa: ARG002
@@ -292,11 +296,11 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
             # All currently implemented gates including controlled gates
-            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()), # type: ignore[no-untyped-call]
+            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()),  # type: ignore[no-untyped-call]
             misc={"characterisation": None},
         )
 
-    def process_circuits( # noqa: D417
+    def process_circuits(  # noqa: D417
         self,
         circuits: Circuit | Sequence[Circuit],
         n_shots: int,
@@ -332,16 +336,18 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 )
                 run_circuit(libhandle, circuit, sv)
 
-                _qubit_idx_map = {q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))}
-
-                # Identify each qubit with an index
-                # IMPORTANT: Reverse qubit indices to match cuStateVec's little-endian convention
-                # (qubit 0 = least significant) vs pytket's big-endian (qubit 0 = most significant).
+                # IMPORTANT: _qubit_idx_map matches cuStateVec's little-endian convention
+                # (qubit 0 = least significant) with pytket's big-endian (qubit 0 = most significant).
                 # Now all operations by the cuStateVec library will be in the correct order.
-                measured_qubit_indices = [_qubit_idx_map[x] for x in circuit.qubit_readout]
-                measured_qubit_indices.reverse()
+                _qubit_idx_map: dict[Qubit, int] = {q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))}
+                # Get relabeled qubit indices that will be measured
+                measured_qubits = [_qubit_idx_map[x] for x in circuit.qubit_readout]
+                # IMPORTANT: After relabling with _qubit_idx_map, cuStateVec.sampler_sample function still
+                # requires its list of measured qubits to be in the LSB-to-MSB order.
+                # This reversal adapts our MSB-first list to the LSB-first format cuStateVec requires.
+                measured_qubits.reverse()
 
-                sampler_descriptor, size_t = cusv.sampler_create( # type: ignore[no-untyped-call]
+                sampler_descriptor, size_t = cusv.sampler_create(  # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sv=sv.array.data.ptr,
                     sv_data_type=cudaDataType.CUDA_C_64F,
@@ -355,34 +361,33 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                 rng = np.random.default_rng(seed)
                 randnums = rng.random(n_shots, dtype=np.float64).tolist()
 
-                cusv.sampler_preprocess( # type: ignore[no-untyped-call]
+                cusv.sampler_preprocess(  # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     extra_workspace=0,
                     extra_workspace_size_in_bytes=0,
                 )
 
-                cusv.sampler_sample( # type: ignore[no-untyped-call]
+                cusv.sampler_sample(  # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
                     sampler=sampler_descriptor,
                     bit_strings=bit_strings_int64.ctypes.data,
-                    bit_ordering=measured_qubit_indices,
-                    bit_string_len=len(measured_qubit_indices),
+                    bit_ordering=measured_qubits,
+                    bit_string_len=len(measured_qubits),
                     randnums=randnums,
                     n_shots=n_shots,
                     output=SamplerOutput.RANDNUM_ORDER,
                 )
 
-                cusv.sampler_destroy(sampler_descriptor) # type: ignore[no-untyped-call]
+                cusv.sampler_destroy(sampler_descriptor)  # type: ignore[no-untyped-call]
 
             handle = ResultHandle(str(uuid4()))
 
             # Reformat bit_strings from list of 64-bit signed integer (memory-efficient
             # way for custatevec to save many shots) to list of binaries for OutcomeArray
-            bit_strings_binary = [format(s, f"0{len(measured_qubit_indices)}b") for s in bit_strings_int64.flatten().tolist()]
+            bit_strings_binary = [format(s, f"0{len(measured_qubits)}b") for s in bit_strings_int64.flatten().tolist()]
             bit_strings_binary = [tuple(map(int, binary)) for binary in bit_strings_binary]
 
-            #TODO: What happens to the classical bits
             # In order to be able to use the BackendResult functionality,
             # we only pass the array of the statevector to BackendResult
             self._cache[handle] = {

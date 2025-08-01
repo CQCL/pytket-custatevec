@@ -14,7 +14,7 @@ def test_remove_meas_and_implicit_swaps() -> None:
     def circuit_with_measurement() -> Circuit:
         """Circuit with measurements.
 
-        TODO: Enforce qubit architecture in the circuit to ensure that implicit swaps are present.
+        # TODO: Enforce qubit architecture in the circuit to ensure that implicit swaps are present.
         """
         circ = Circuit(5)
         circ.CX(0, 1)
@@ -39,10 +39,10 @@ def test_remove_meas_and_implicit_swaps() -> None:
     cu_backend = CuStateVecStateBackend()
 
     cu_handle_clean = cu_backend.process_circuits([clean_circ])
-    sv_clean = cu_backend.get_result(cu_handle_clean[0]).get_state().array
+    sv_clean = cu_backend.get_result(cu_handle_clean[0]).get_state()
 
     cu_handle_original = cu_backend.process_circuits([original_circ])
-    sv_original = cu_backend.get_result(cu_handle_original[0]).get_state().array
+    sv_original = cu_backend.get_result(cu_handle_original[0]).get_state()
 
     assert np.allclose(sv_original, sv_clean, atol=1e-8), "Statevectors do not match"
 
