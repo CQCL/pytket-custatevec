@@ -54,11 +54,11 @@ def test_initial_statevector() -> None:
                 sv = initial_statevector(
                     libhandle,
                     n,
-                    state_name,  # type: ignore[no-untyped-call]
+                    state_name,  # type: ignore[arg-type]
                     dtype=cudaDataType.CUDA_C_64F,
                 )
                 generated_state = sv.array
-                expected_state = state_func(n)
+                expected_state = state_func(n)  # type: ignore[no-untyped-call]
                 assert np.allclose(
                     generated_state,
                     expected_state,

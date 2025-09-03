@@ -34,3 +34,4 @@ repos:
     rev: v1.11.2  # pick a stable mypy release
     hooks:
       - id: mypy
+        args: ["--explicit-package-bases",  "--ignore-missing-imports"]

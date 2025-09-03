@@ -8,8 +8,9 @@ from .utils import INSTALL_CUDA_ERROR_MESSAGE
 try:
     import cupy as cp
     from cuquantum import cudaDataType
-except ImportError as e:
-    raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(e.name)) from e
+except ImportError as _cuda_import_err:
+    raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(getattr(_cuda_import_err, "name", None))) from _cuda_import_err
+
 
 from numpy.typing import DTypeLike, NDArray
 

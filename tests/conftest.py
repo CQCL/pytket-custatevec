@@ -96,6 +96,7 @@ def global_phase_circuit() -> tuple[Circuit, np.ndarray]:
     expected = np.asarray([1, 0]) * np.exp(1j * np.pi * 0.5)
     return c, expected
 
+
 @pytest.fixture
 def circuit_with_adjoint_gates() -> Circuit:
     """Circuit with adjoint gates."""
@@ -109,6 +110,7 @@ def circuit_with_adjoint_gates() -> Circuit:
     c.Vdg(2)
     c.CSXdg(1, 2)
     return c
+
 
 def random_line_circuit(n_qubits: int, layers: int) -> Circuit:
     """Random circuit with line connectivity."""
@@ -133,24 +135,24 @@ def random_line_circuit(n_qubits: int, layers: int) -> Circuit:
     return c
 
 
-def quantum_volume_circuit(n_qubits: int) -> Circuit:
-    """Random quantum volume circuit."""
-    depth = n_qubits
-    c = Circuit(n_qubits)
+# def quantum_volume_circuit(n_qubits: int) -> Circuit:
+#     """Random quantum volume circuit."""
+#     depth = n_qubits
+#     c = Circuit(n_qubits)
 
-    for _ in range(depth):
-        qubits = np.random.permutation([i for i in range(n_qubits)])  # noqa: C416, NPY002
-        qubit_pairs = [[qubits[i], qubits[i + 1]] for i in range(0, n_qubits - 1, 2)]
+#     for _ in range(depth):
+#         qubits = np.random.permutation([i for i in range(n_qubits)])  # noqa: C416, NPY002
+#         qubit_pairs = [[qubits[i], qubits[i + 1]] for i in range(0, n_qubits - 1, 2)]
 
-        for pair in qubit_pairs:
-            # Generate random 4x4 unitary matrix.
-            SU4 = unitary_group.rvs(4)  # random unitary in SU4
-            SU4 = SU4 / (np.linalg.det(SU4) ** 0.25)
-            SU4 = np.asarray(SU4)
-            c.add_unitary2qbox(Unitary2qBox(SU4), *pair)
+#         for pair in qubit_pairs:
+#             # Generate random 4x4 unitary matrix.
+#             SU4 = unitary_group.rvs(4)  # random unitary in SU4
+#             SU4 = SU4 / (np.linalg.det(SU4) ** 0.25)
+#             SU4 = np.asarray(SU4)
+#             c.add_unitary2qbox(Unitary2qBox(SU4), *pair)
 
-    DecomposeBoxes().apply(c)
-    return c
+#     DecomposeBoxes().apply(c)
+#     return c
 
 
 @pytest.fixture
@@ -269,31 +271,31 @@ def q3_cx01cz12x1rx0() -> Circuit:
     return circuit
 
 
-@pytest.fixture
-def q4_lcu1() -> Circuit:
-    circuit = Circuit(4)
-    circuit.Ry(0.78, 3).Ry(0.27, 2).CX(2, 3).Ry(0.58, 2).Ry(0.21, 3)
-    circuit.Ry(0.12, 0).Ry(0.56, 1)
-    circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
-    circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
-        0,
-    ).X(1)
-    circuit.Ry(-0.12, 0).Ry(-0.56, 1)
-    return circuit
+# @pytest.fixture
+# def q4_lcu1() -> Circuit:
+#     circuit = Circuit(4)
+#     circuit.Ry(0.78, 3).Ry(0.27, 2).CX(2, 3).Ry(0.58, 2).Ry(0.21, 3)
+#     circuit.Ry(0.12, 0).Ry(0.56, 1)
+#     circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
+#     circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
+#         0,
+#     ).X(1)
+#     circuit.Ry(-0.12, 0).Ry(-0.56, 1)
+#     return circuit
 
 
-@pytest.fixture
-def q4_lcu1_parameterised() -> Circuit:
-    a, b, c = Symbol("a"), Symbol("b"), Symbol("c")
-    circuit = Circuit(4)
-    circuit.Ry(a, 3).Ry(0.27, 2).CX(2, 3).Ry(b, 2).Ry(0.21, 3)
-    circuit.Ry(0.12, 0).Ry(a, 1)
-    circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
-    circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
-        0,
-    ).X(1)
-    circuit.Ry(-b, 0).Ry(-c, 1)
-    return circuit
+# @pytest.fixture
+# def q4_lcu1_parameterised() -> Circuit:
+#     a, b, c = Symbol("a"), Symbol("b"), Symbol("c")
+#     circuit = Circuit(4)
+#     circuit.Ry(a, 3).Ry(0.27, 2).CX(2, 3).Ry(b, 2).Ry(0.21, 3)
+#     circuit.Ry(0.12, 0).Ry(a, 1)
+#     circuit.add_gate(OpType.CnX, [0, 1, 2]).add_gate(OpType.CnX, [0, 1, 3])
+#     circuit.X(0).X(1).add_gate(OpType.CnY, [0, 1, 2]).add_gate(OpType.CnY, [0, 1, 3]).X(
+#         0,
+#     ).X(1)
+#     circuit.Ry(-b, 0).Ry(-c, 1)
+#     return circuit
 
 
 @pytest.fixture
@@ -345,17 +347,17 @@ def q5_h0s1rz2ry3tk4tk13() -> Circuit:
     return circuit
 
 
-@pytest.fixture
-def q5_h0s1rz2ry3tk4tk13_parameterised() -> Circuit:
-    a, b, c = Symbol("a"), Symbol("b"), Symbol("c")
-    circuit = Circuit(5)
-    circuit.H(0)
-    circuit.S(1)
-    circuit.Rz(a * c, 2)
-    circuit.Ry(b + a, 3)
-    circuit.TK1(a, b, c, 4)
-    circuit.TK2(a - b, c - a, (a + b) * c, 1, 3)
-    return circuit
+# @pytest.fixture
+# def q5_h0s1rz2ry3tk4tk13_parameterised() -> Circuit:
+#     a, b, c = Symbol("a"), Symbol("b"), Symbol("c")
+#     circuit = Circuit(5)
+#     circuit.H(0)
+#     circuit.S(1)
+#     circuit.Rz(a * c, 2)
+#     circuit.Ry(b + a, 3)
+#     circuit.TK1(a, b, c, 4)
+#     circuit.TK2(a - b, c - a, (a + b) * c, 1, 3)
+#     return circuit
 
 
 @pytest.fixture
@@ -380,51 +382,51 @@ def q20_line_circ_20_layers() -> Circuit:
     return random_line_circuit(n_qubits=20, layers=20)
 
 
-@pytest.fixture
-def q6_qvol() -> Circuit:
-    np.random.seed(1)  # noqa: NPY002
-    return quantum_volume_circuit(n_qubits=6)
+# @pytest.fixture
+# def q6_qvol() -> Circuit:
+#     np.random.seed(1)  # noqa: NPY002
+#     return quantum_volume_circuit(n_qubits=6)
 
 
-@pytest.fixture
-def q8_qvol() -> Circuit:
-    np.random.seed(1)  # noqa: NPY002
-    return quantum_volume_circuit(n_qubits=8)
+# @pytest.fixture
+# def q8_qvol() -> Circuit:
+#     np.random.seed(1)  # noqa: NPY002
+#     return quantum_volume_circuit(n_qubits=8)
 
 
-@pytest.fixture
-def q15_qvol() -> Circuit:
-    np.random.seed(1)  # noqa: NPY002
-    return quantum_volume_circuit(n_qubits=15)
+# @pytest.fixture
+# def q15_qvol() -> Circuit:
+#     np.random.seed(1)  # noqa: NPY002
+#     return quantum_volume_circuit(n_qubits=15)
 
 
-@pytest.fixture
-def q3_toffoli_box_with_implicit_swaps() -> Circuit:
-    # Using specific permutation here
-    perm = {
-        (False, False): (True, True),
-        (False, True): (False, False),
-        (True, False): (True, False),
-        (True, True): (False, True),
-    }
+# @pytest.fixture
+# def q3_toffoli_box_with_implicit_swaps() -> Circuit:
+#     # Using specific permutation here
+#     perm = {
+#         (False, False): (True, True),
+#         (False, True): (False, False),
+#         (True, False): (True, False),
+#         (True, True): (False, True),
+#     }
 
-    # Create a circuit with more qubits and multiple applications of the permutation
-    # above
-    circ = Circuit(3)
+#     # Create a circuit with more qubits and multiple applications of the permutation
+#     # above
+#     circ = Circuit(3)
 
-    # Create the circuit
-    circ.add_toffolibox(ToffoliBox(perm), [Qubit(0), Qubit(1)])
-    circ.add_toffolibox(ToffoliBox(perm), [Qubit(1), Qubit(2)])
+#     # Create the circuit
+#     circ.add_toffolibox(ToffoliBox(perm), [Qubit(0), Qubit(1)])
+#     circ.add_toffolibox(ToffoliBox(perm), [Qubit(1), Qubit(2)])
 
-    DecomposeBoxes().apply(circ)
-    CnXPairwiseDecomposition().apply(circ)
-    Transform.OptimiseCliffords().apply(circ)
+#     DecomposeBoxes().apply(circ)
+#     CnXPairwiseDecomposition().apply(circ)
+#     Transform.OptimiseCliffords().apply(circ)
 
-    # Check that, indeed, there are implicit swaps
-    implicit_perm = circ.implicit_qubit_permutation()
-    assert any(qin != qout for qin, qout in implicit_perm.items())
+#     # Check that, indeed, there are implicit swaps
+#     implicit_perm = circ.implicit_qubit_permutation()
+#     assert any(qin != qout for qin, qout in implicit_perm.items())
 
-    return circ
+#     return circ
 
 
 # Operator Fixtures

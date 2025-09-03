@@ -29,8 +29,8 @@ from .utils import INSTALL_CUDA_ERROR_MESSAGE
 try:
     import cupy as cp
     import cuquantum.custatevec as cusv
-except ImportError as e:
-    raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(e.name)) from e
+except ImportError as _cuda_import_err:
+    raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(getattr(_cuda_import_err, "name", None))) from _cuda_import_err
 
 
 class CuStateVecHandle:
@@ -67,7 +67,7 @@ class CuStateVecHandle:
         self._handle = cusv.create()  # type: ignore[no-untyped-call]
 
         def malloc(size: int, stream: Stream) -> int:
-            return cp.cuda.runtime.mallocAsync(size, stream)
+            return int(cp.cuda.runtime.mallocAsync(size, stream))
 
         def free(ptr: int, stream: Stream) -> None:
             cp.cuda.runtime.freeAsync(ptr, stream)
@@ -90,7 +90,7 @@ class CuStateVecHandle:
                 "The cuStateVec library handle is out of scope.",
                 "See the documentation of CuStateVecHandle.",
             )
-        return self._handle
+        return int(self._handle)
 
     def destroy(self) -> None:
         """Destroys the memory handle, releasing memory.
