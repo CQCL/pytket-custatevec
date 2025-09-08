@@ -59,8 +59,8 @@ tests and is accepted after review, it will be merged in.
 
 ### Code style
 
-Code style can be checked locally using [pre-commit](https://pre-commit.com/) hooks; run pre-commit 
-before commiting your changes and opening a pull request by executing
+Code style can be checked locally using [pre-commit](https://pre-commit.com/) hooks; run pre-commit
+before committing your changes and opening a pull request by executing
 ```
 pre-commit run
 ```
@@ -71,7 +71,7 @@ This will automatically:
 with a set of style requirements (listed in `ruff.toml`).
 
 Compliance with the above checks is checked by continuous integration before a pull request
- can be merged. 
+ can be merged.
 
 #### Docstrings
 

@@ -33,11 +33,11 @@ jobs:
       run: pip install ruff mypy
 
     - name: Check formatting using ruff
-      run: uv run ruff format --check
+      run: ruff format --check
 
     - name: Lint using ruff
-      run: uv run ruff check
+      run: ruff check
 
     - name: Check static typing with mypy
       run: |
-        uv run mypy .
+        mypy .
