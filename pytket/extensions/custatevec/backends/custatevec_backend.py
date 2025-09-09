@@ -235,7 +235,10 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
     ) -> ResultHandle:
         """Submits circuits to the backend for running."""
         return self.process_circuits(
-            [circuit], n_shots=n_shots, valid_check=valid_check, **kwargs,
+            [circuit],
+            n_shots=n_shots,
+            valid_check=valid_check,
+            **kwargs,
         )[0]
 
     def process_circuits(  # noqa: D417
@@ -340,19 +343,22 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
     def process_circuit(
         self,
         circuit: Circuit,
-        n_shots: int = 100000,
+        n_shots: int | None = None,
         valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> ResultHandle:
         """Submits circuits to the backend for running."""
         return self.process_circuits(
-            [circuit], n_shots=n_shots, valid_check=valid_check, **kwargs,
+            [circuit],
+            n_shots=n_shots,
+            valid_check=valid_check,
+            **kwargs,
         )[0]
 
     def process_circuits(  # noqa: D417
         self,
         circuits: Sequence[Circuit],
-        n_shots: int = 100000,
+        n_shots: int | Sequence[int] | None = None,
         valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
@@ -399,6 +405,9 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                     n_index_bits=sv.n_qubits,
                     n_max_shots=n_shots,
                 )
+
+                if n_shots is None:
+                    raise ValueError("n_shots must be specified for shot-based simulation.")
 
                 bit_strings_int64 = np.empty((n_shots, 1), dtype=np.int64)  # needs to be int64
 
