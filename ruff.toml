@@ -14,7 +14,6 @@ lint.select = [
   "BLE",  # flake8-blind-except
   "C4",   # flake8-comprehensions
   "C90",  # mccabe
-  "COM",  # flake8-commas
   "D",    # pydocstyle
   "EM",   # flake8-errmsg
   "ERA",  # eradicate
@@ -30,7 +29,6 @@ lint.select = [
   "ICN",  # flake8-import-conventions
   "INP",  # flake8-no-pep420
   "INT",  # flake8-gettext
-  "ISC",  # flake8-implicit-str-concat
   "LOG",  # flake8-logging
   "N",    # pep8-Naming
   "NPY",  # NumPy-specific
@@ -86,8 +84,8 @@ lint.ignore = [
     "S101",  # Use of `assert` detected.
     "D103",  # Missing docstring in public function.
     "N806",  # Variable in function should be lowercase.
-    "ERA001", # Commented code
-    "RUF100", # Unused noqa directive
+    "ERA001", # Commented code.
+    "RUF100", # Unused noqa directive.
 ]
 
 [lint.pydocstyle]

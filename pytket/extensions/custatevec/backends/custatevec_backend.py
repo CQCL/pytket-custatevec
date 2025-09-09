@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import cupy as cp
-import cuquantum.custatevec as cusv
 import numpy as np
 from cuquantum import cudaDataType
+from cuquantum.bindings import custatevec as cusv
 from cuquantum.bindings.custatevec import SamplerOutput
 
 from pytket._tket.circuit import Circuit
@@ -62,7 +62,7 @@ from pytket.utils.results import KwargTypes
 from .._metadata import __extension_name__, __extension_version__  # noqa: TID252
 
 if TYPE_CHECKING:
-    from pytket.circuit import Qubit
+    from pytket.circuit import OpType, Qubit
 
 
 class _CuStateVecBaseBackend(Backend):
@@ -150,12 +150,37 @@ class _CuStateVecBaseBackend(Backend):
         raise CircuitNotRunError(handle)
 
     @abstractmethod
+    def process_circuit(  # noqa: D417
+        self,
+        circuit: Circuit,
+        n_shots: int | None = None,
+        valid_check: bool = True,
+        **kwargs: KwargTypes,
+    ) -> ResultHandle:
+        """Submits a circuit to the backend for running.
+
+        The result will be stored in the backend's result cache to be retrieved by the
+        corresponding get_<data> method.
+
+        Args:
+            circuit: Circuit to be submitted.
+            n_shots: Number of shots in case of shot-based calculation.
+            valid_check: Whether to check for circuit correctness.
+
+        Returns:
+            Result handle object.
+
+        Raises:
+            TypeError: If global phase is dependent on a symbolic parameter.
+        """
+        ...
+
+    @abstractmethod
     def process_circuits(  # noqa: D417
         self,
-        circuits: Circuit | Sequence[Circuit],
-        n_shots: int,
-        seed: int,
-        valid_check: bool,
+        circuits: Sequence[Circuit],
+        n_shots: int | Sequence[int] | None = None,
+        valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
         """Submits circuits to the backend for running.
@@ -197,15 +222,32 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
             # All currently implemented gates including controlled gates
-            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()),  # type: ignore[no-untyped-call]
+            gate_set=(
+                {OpType[g.name] for g in gate_list if g.name in OpType.__members__}
+                | {OpType[name] for name in _control_to_gate_map if name in OpType.__members__}
+            ),
             misc={"characterisation": None},
         )
 
+    def process_circuit(
+        self,
+        circuit: Circuit,
+        n_shots: int | None = None,
+        valid_check: bool = True,
+        **kwargs: KwargTypes,
+    ) -> ResultHandle:
+        """Submits circuits to the backend for running."""
+        return self.process_circuits(
+            [circuit],
+            n_shots=n_shots,
+            valid_check=valid_check,
+            **kwargs,
+        )[0]
+
     def process_circuits(  # noqa: D417
         self,
-        circuits: Circuit | Sequence[Circuit],
-        n_shots: int = 0,  # noqa: ARG002
-        seed: int = 0,  # noqa: ARG002
+        circuits: Sequence[Circuit],
+        n_shots: int | Sequence[int] | None = None,  # noqa: ARG002
         valid_check: bool = True,
         **kwargs: KwargTypes,  # noqa: ARG002
     ) -> list[ResultHandle]:
@@ -225,9 +267,6 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         Returns:
             Results handle objects.
         """
-        # Ensure circuits is always a sequence
-        circuits = [circuits] if isinstance(circuits, Circuit) else circuits
-
         if valid_check:
             self._check_all_circuits(circuits, nomeasure_warn=False)
 
@@ -300,17 +339,34 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
             device_name="NVIDIA GPU",
             version=__extension_name__ + "==" + __extension_version__,
             # All currently implemented gates including controlled gates
-            gate_set={gate.name for gate in gate_list}.union(_control_to_gate_map.keys()),  # type: ignore[no-untyped-call]
+            gate_set=(
+                {OpType[g.name] for g in gate_list if g.name in OpType.__members__}
+                | {OpType[name] for name in _control_to_gate_map if name in OpType.__members__}
+            ),
             misc={"characterisation": None},
         )
 
+    def process_circuit(
+        self,
+        circuit: Circuit,
+        n_shots: int | None = None,
+        valid_check: bool = True,
+        **kwargs: KwargTypes,
+    ) -> ResultHandle:
+        """Submits circuits to the backend for running."""
+        return self.process_circuits(
+            [circuit],
+            n_shots=n_shots,
+            valid_check=valid_check,
+            **kwargs,
+        )[0]
+
     def process_circuits(  # noqa: D417
         self,
-        circuits: Circuit | Sequence[Circuit],
-        n_shots: int,
-        seed: int = 4,  # type: ignore[override]
+        circuits: Sequence[Circuit],
+        n_shots: int | Sequence[int] | None = None,
         valid_check: bool = True,
-        **kwargs: KwargTypes,  # noqa: ARG002
+        **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
         """Submits circuits to the backend for running and returns result handles.
 
@@ -323,14 +379,16 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
         Returns:
             List of result handles for the submitted circuits.
         """
-        # Ensure circuits is always a sequence
-        circuits = [circuits] if isinstance(circuits, Circuit) else circuits
+        if n_shots is None:
+            raise ValueError("n_shots must be specified for shot-based simulation.")
+
+        all_shots = [n_shots] * len(circuits) if isinstance(n_shots, int) else n_shots
 
         if valid_check:
             self._check_all_circuits(circuits, nomeasure_warn=False)
 
         handle_list = []
-        for circuit in circuits:
+        for circuit, circ_shots in zip(circuits, all_shots, strict=False):
             with CuStateVecHandle() as libhandle:
                 sv = initial_statevector(
                     handle=libhandle,
@@ -356,14 +414,15 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
                     sv=sv.array.data.ptr,
                     sv_data_type=cudaDataType.CUDA_C_64F,
                     n_index_bits=sv.n_qubits,
-                    n_max_shots=n_shots,
+                    n_max_shots=circ_shots,
                 )
 
-                bit_strings_int64 = np.empty((n_shots, 1), dtype=np.int64)  # needs to be int64
+                bit_strings_int64 = np.empty((circ_shots, 1), dtype=np.int64)  # needs to be int64
 
                 # Generate random numbers for sampling
+                seed = kwargs.get("seed")
                 rng = np.random.default_rng(seed)
-                randnums = rng.random(n_shots, dtype=np.float64).tolist()
+                randnums = np.atleast_1d(rng.random(circ_shots, dtype=np.float64)).tolist()
 
                 cusv.sampler_preprocess(  # type: ignore[no-untyped-call]
                     handle=libhandle.handle,
