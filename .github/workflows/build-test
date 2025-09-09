@@ -44,7 +44,7 @@ done
 # Test and mypy:
 if [[ "${MYPY}" = "mypy" ]]
 then
-    python -m pip install --upgrade mypy
+    python -m pip install "mypy==1.11.2"
 fi
 
 # Currently all tests depend on cuQuantum, so are disabled
