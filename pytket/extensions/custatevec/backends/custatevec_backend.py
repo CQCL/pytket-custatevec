@@ -261,9 +261,6 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
         Returns:
             Results handle objects.
         """
-        # Ensure circuits is always a sequence
-        circuits = [circuits] if isinstance(circuits, Circuit) else circuits
-
         if valid_check:
             self._check_all_circuits(circuits, nomeasure_warn=False)
 
@@ -343,7 +340,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
     def process_circuit(
         self,
         circuit: Circuit,
-        n_shots: int | None = None,
+        n_shots: int = 100000,
         valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> ResultHandle:
@@ -355,7 +352,7 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
     def process_circuits(  # noqa: D417
         self,
         circuits: Sequence[Circuit],
-        n_shots: int | Sequence[int] | None = None,
+        n_shots: int = 100000,
         valid_check: bool = True,
         **kwargs: KwargTypes,
     ) -> list[ResultHandle]:
@@ -370,9 +367,6 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
         Returns:
             List of result handles for the submitted circuits.
         """
-        # Ensure circuits is always a sequence
-        circuits = [circuits] if isinstance(circuits, Circuit) else circuits
-
         if valid_check:
             self._check_all_circuits(circuits, nomeasure_warn=False)
 

@@ -139,7 +139,7 @@ def test_custatevecstate_state_vector_vs_aer_and_qulacs(
     cu_backend = CuStateVecStateBackend()
     cu_circuit = cu_backend.get_compiled_circuit(circuit)
     cu_handle = cu_backend.process_circuit(cu_circuit)
-    cu_result = cu_backend.get_result(cu_handle[0]).get_state()
+    cu_result = cu_backend.get_result(cu_handle).get_state()
 
     if expected is not None:
         assert np.allclose(cu_result, expected)
@@ -259,7 +259,7 @@ def test_custatevecstate_basisorder() -> None:
     cu_backend = CuStateVecStateBackend()
     c = cu_backend.get_compiled_circuit(c)
     cu_handle = cu_backend.process_circuit(c)
-    cu_result = cu_backend.get_result(cu_handle[0])
+    cu_result = cu_backend.get_result(cu_handle)
     assert np.allclose(cu_result.get_state(), np.asarray([0, 1, 0, 0]))
     assert np.allclose(cu_result.get_state(basis=BasisOrder.dlo), np.asarray([0, 0, 1, 0]))
 
@@ -363,8 +363,8 @@ def test_custatevecshots_basisorder() -> None:
     c.measure_all()
     cu_backend = CuStateVecShotsBackend()
     c = cu_backend.get_compiled_circuit(c)
-    cu_handle = cu_backend.process_circuits(c, n_shots=10)
-    cu_result = cu_backend.get_result(cu_handle[0])
+    cu_handle = cu_backend.process_circuit(c, n_shots=10)
+    cu_result = cu_backend.get_result(cu_handle)
     assert cu_result.get_counts() == {(0, 1): 10}
     assert cu_result.get_counts(basis=BasisOrder.dlo) == {(1, 0): 10}
 
@@ -377,8 +377,8 @@ def test_custatevecshots_partial_measurement() -> None:
     circ.Measure(2, 1)
     cu_backend = CuStateVecShotsBackend()
     cu_circuit = cu_backend.get_compiled_circuit(circ)
-    cu_handle = cu_backend.process_circuits(cu_circuit, n_shots=100)
-    cu_result = cu_backend.get_result(cu_handle[0])
+    cu_handle = cu_backend.process_circuit(cu_circuit, n_shots=100)
+    cu_result = cu_backend.get_result(cu_handle)
     cu_counts = cu_result.get_counts()
 
     qulacs_backend = QulacsBackend()
