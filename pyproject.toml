@@ -14,7 +14,7 @@ authors = [
   { name = "Pranav Kalidindi", email = "pranav.kalidindi@quantinuum.com" },
 ]
 
-dependencies = ["pytket"]
+dependencies = ["pytket", "cupy-cuda12x"]
 
 [project.optional-dependencies]
 dev = [
@@ -29,7 +29,6 @@ test = [
   "pytest",
   "pytket-qiskit",
   "pytket-qulacs",
-  "cupy",
 ]
 
 [tool.setuptools.packages.find]
