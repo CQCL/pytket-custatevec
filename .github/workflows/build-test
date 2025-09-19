@@ -48,7 +48,7 @@ then
 fi
 
 # Run tests
-python -m pip cuquantum-python-cu12
+python -m pip install cuquantum-python-cu12
 python -m pip install .[dev,test]
 
 cd ${GITHUB_WORKSPACE}/tests
