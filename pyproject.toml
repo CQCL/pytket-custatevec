@@ -29,6 +29,7 @@ test = [
   "pytest",
   "pytket-qiskit",
   "pytket-qulacs",
+  "cupy",
 ]
 
 [tool.setuptools.packages.find]

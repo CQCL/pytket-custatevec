@@ -48,6 +48,7 @@ then
 fi
 
 # Run tests
+conda install -c conda-forge cuquantum-python
 python -m pip install .[dev,test]
 
 cd ${GITHUB_WORKSPACE}/tests
