@@ -22,7 +22,7 @@ jobs:
     name: cuStateVec - Build and test module
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'quantinuum-gpu']
+        os: ['self-hosted']
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v5
