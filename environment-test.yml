@@ -3,12 +3,16 @@ channels:
   - cqcl
   - conda-forge
 dependencies:
-  # The Python version will be injected by the GitHub Actions matrix
+  # Conda packages
+  - python
   - pip
   - pytket
   - cupy
   - cuquantum-python
   - pytest
-  - pytket-qiskit
-  - pytket-qulacs
-  - mypy
+
+  # Pip-only packages
+  - pip:
+      - pytket-qiskit
+      - pytket-qulacs
+      - mypy
