@@ -18,7 +18,7 @@ dependencies = ["pytket", "cupy-cuda12x", "cuquantum-python-cu12>=25.3.0"]
 
 [project.optional-dependencies]
 dev = [
-  ""pytket-custatevec[test]",
+  "pytket-custatevec[test]",
   "pre-commit==4.3.0",
   "pytest==8.4.1",
   "sphinx==8.1.3",
