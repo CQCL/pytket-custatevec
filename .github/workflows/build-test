@@ -36,23 +36,27 @@ python -m pip install --upgrade pip wheel build
 # 1. Build the package (sdist and wheel)
 python -m build
 
-# 2. Copy the new wheel to your artifacts directory
-cp dist/*.whl ${ARTIFACTSDIR}
+# 2. Install dependencies for testing from your pyproject.toml
+#    Note: We install these *before* your wheel.
+python -m pip install .[test]
 
-# Test and mypy:
-if [[ "${MYPY}" = "mypy" ]]
-then
-    python -m pip install "mypy==1.11.2"
-fi
+# 3. Install the wheel you just built.
+#    This is a clean, non-editable installation.
+#    The `.` tells pip to find the wheel in the dist/ directory.
+python -m pip install .
 
-# 3. Install your package in editable mode along with all dev/test dependencies.
-python -m pip install -e .[dev,test]
+# 4. Verify the installation (optional but recommended)
+echo "--- Verifying final installation ---"
+pip list
+python -c "import cuquantum.custatevec; print('Successfully imported cuquantum.custatevec')"
+echo "------------------------------------"
 
-# 4. Run pytest from the root, but explicitly point it at the tests directory.
+# 5. Run pytest from the root, targeting the tests directory
 pytest tests/
 
-# 5. Run mypy check if needed
+# 6. Run mypy check if needed
 if [[ "${MYPY}" = "mypy" ]]
 then
+    python -m pip install "mypy==1.17.1"
     ${GITHUB_WORKSPACE}/mypy-check ${GITHUB_WORKSPACE}
 fi
