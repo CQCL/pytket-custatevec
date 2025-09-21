@@ -1,62 +1,25 @@
 #!/bin/bash
 set -evu
 
-# Usage:
-#
-# build-test [mypy|nomypy]
-#
-# Arguments:
-# - mypy: include mypy check ("mypy" or "nomypy")
-#
-# Environment variables used:
-# - GITHUB_WORKSPACE: workspace directory
-#
-# WARNING: running this locally will delete any local files that
-# aren't strictly part of the git tree, including gitignored files!
-
-MODULE=pytket-custatevec
-
-MYPY=$1
-
-PLAT=`python -c 'import platform; print(platform.system())'`
-
-PYVER=`python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))'`
-
-git clean -dfx
-
-echo "Module to test: ${MODULE}"
-
-MODULEDIR="${GITHUB_WORKSPACE}"
-ARTIFACTSDIR=${GITHUB_WORKSPACE}/wheelhouse
-
-rm -rf ${ARTIFACTSDIR} && mkdir ${ARTIFACTSDIR}
-
+# 1. Install necessary build tools
 python -m pip install --upgrade pip wheel build
 
-# 1. Build the package (sdist and wheel)
+# 2. Build your package wheel
 python -m build
 
-# 2. Install dependencies for testing from your pyproject.toml
-#    Note: We install these *before* your wheel.
-python -m pip install .[test]
+# 3. Install the complete development and testing environment in one step.
+#    This command installs main, test, and dev dependencies.
+python -m pip install .[dev]
 
-# 3. Install the wheel you just built.
-#    This is a clean, non-editable installation.
-#    The `.` tells pip to find the wheel in the dist/ directory.
-python -m pip install .
+# 4. Re-install using the wheel file to ensure you're testing the final artifact.
+#    The --force-reinstall flag ensures the wheel overwrites the editable install.
+python -m pip install --force-reinstall dist/*.whl
 
-# 4. Verify the installation (optional but recommended)
-echo "--- Verifying final installation ---"
-pip list
-python -c "import cuquantum.custatevec; print('Successfully imported cuquantum.custatevec')"
-echo "------------------------------------"
-
-# 5. Run pytest from the root, targeting the tests directory
+# 5. Run the tests from the root directory
 pytest tests/
 
-# 6. Run mypy check if needed
-if [[ "${MYPY}" = "mypy" ]]
-then
-    python -m pip install "mypy==1.17.1"
+# 6. Conditionally run your mypy check
+if [[ "${MYPY}" = "mypy" ]]; then
+    echo "--- Running mypy check ---"
     ${GITHUB_WORKSPACE}/mypy-check ${GITHUB_WORKSPACE}
 fi
