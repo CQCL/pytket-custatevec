@@ -1,5 +1,6 @@
 name: pytket-custatevec-test
 channels:
+  - cqcl
   - conda-forge
 dependencies:
   # The Python version will be injected by the GitHub Actions matrix
