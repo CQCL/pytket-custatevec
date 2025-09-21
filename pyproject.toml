@@ -29,7 +29,7 @@ test = [
   "pytest",
   "pytket-qiskit",
   "pytket-qulacs",
-  ""cuquantum-python-cu12>=25.3.0",
+  "cuquantum-python-cu12>=25.3.0",
 ]
 
 [tool.setuptools.packages.find]
