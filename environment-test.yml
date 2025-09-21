@@ -1,0 +1,17 @@
+name: pytket-custatevec-test
+channels:
+  - conda-forge
+dependencies:
+  # Core Python
+  - python=3.11
+
+  # Dependencies from your pyproject.toml
+  - pip
+  - pytket
+  - cupy
+  - cuquantum-python
+  - pytest
+  - pytket-qiskit
+  - pytket-qulacs
+  - mypy
+  # Add any other dev/test tools here
