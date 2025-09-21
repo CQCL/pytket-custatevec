@@ -40,11 +40,16 @@ jobs:
     #   run: |
     #     chmod +x ./.github/workflows/build-test
     #     ./.github/workflows/build-test mypy
-    - name: Set up Python 3.11
-      if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'schedule'
-      uses: actions/setup-python@v6
+    # --- ⬇️ REPLACE setup-python WITH THIS ⬇️ ---
+    - name: Set up Conda Environment
+      uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: '3.11'
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge
+        channel-priority: strict
+        # Install all dependencies from conda-forge in one go
+        environment-file: environment-test.yml
     - name: Build (3.11)
       if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'schedule'
       shell: bash
