@@ -1,0 +1,18 @@
+name: pytket-custatevec-test
+channels:
+  - cqcl
+  - conda-forge
+dependencies:
+  # Conda packages
+  - python
+  - pip
+  - cupy
+  - cuquantum-python
+  - pytest
+
+  # Pip-only packages
+  - pip:
+      - pytket
+      - pytket-qiskit
+      - pytket-qulacs
+      - mypy

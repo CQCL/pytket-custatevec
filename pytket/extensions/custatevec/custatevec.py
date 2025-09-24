@@ -20,7 +20,7 @@ from .utils import INSTALL_CUDA_ERROR_MESSAGE
 
 try:
     import cupy as cp
-    import cuquantum.custatevec as cusv
+    from cuquantum.bindings import custatevec as cusv
     from cuquantum.bindings._utils import cudaDataType
     from cuquantum.bindings.custatevec import Pauli, StateVectorType
 except ImportError as _cuda_import_err:
