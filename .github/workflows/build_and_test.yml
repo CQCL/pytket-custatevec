@@ -16,6 +16,8 @@ jobs:
             ver: "3.12"
           - py: "python3.11"
             ver: "3.11"
+          - py: "python3.10"
+            ver: "3.10"
 
     steps:
       - uses: actions/checkout@v4
