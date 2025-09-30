@@ -8,7 +8,6 @@ on:
 jobs:
   test:
     runs-on: self-hosted
-
     steps:
       - uses: actions/checkout@v4
 
@@ -18,18 +17,21 @@ jobs:
           command -v python3.12 >/dev/null || { echo "python3.12 not found"; exit 1; }
           python3.12 -V
 
-      - name: Install package and run tests (reuse system packages)
+      - name: Create env (prefer venv, fallback to virtualenv)
         shell: bash
         run: |
           set -euo pipefail
-          python3.12 -m venv .venv --system-site-packages
+          if python3.12 -m venv .venv --system-site-packages 2>/dev/null; then
+            echo "Created venv with built-in venv"
+          else
+            echo "Built-in venv unavailable; using virtualenv fallback"
+            # install virtualenv just for this user; avoids needing root
+            python3.12 -m pip install --user virtualenv
+            python3.12 -m virtualenv .venv --system-site-packages
+          fi
+
+          # activate and run tests
           source .venv/bin/activate
-
-          # small bootstrap only; heavy GPU libs are reused from system site-packages
           python -m pip install -U pip setuptools wheel
-
-          # install your package + test extras; pip builds a wheel under the hood
           python -m pip install --no-build-isolation ".[test]"
-
-          # run tests
           pytest -q
