@@ -1,4 +1,4 @@
-name: Test (uv, Py3.12)
+name: Test (uv, 3.12 & 3.11)
 
 on:
   pull_request:
@@ -8,35 +8,47 @@ on:
 jobs:
   test:
     runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        py: ["python3.12", "python3.11"]
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Ensure python3.12 exists
-        shell: bash
-        run: |
-          command -v python3.12 >/dev/null || { echo "python3.12 not found"; exit 1; }
-          python3.12 -V
 
       - name: Install uv (no sudo)
         shell: bash
         run: |
           set -euo pipefail
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           uv --version
 
-      - name: Create venv, install, and test
+      - name: Ensure ${{ matrix.py }} exists (install locally if missing)
         shell: bash
         run: |
           set -euo pipefail
-          # venv reuses system packages if present
-          uv venv --python python3.12 --system-site-packages .venv
+          if ! command -v ${{ matrix.py }} >/dev/null 2>&1; then
+            echo "${{ matrix.py }} not found; installing locally with uv..."
+            ver=${{ matrix.py#python}}
+            uv python install "$ver"
+          fi
+          ${{ matrix.py }} -V
+
+      - name: Create venv, install deps, run tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          ver=${{ matrix.py#python}}
+          PYBIN="$(uv python find "$ver")"
+          echo "Using interpreter: $PYBIN"
+
+          # Reuse preinstalled libs if present; otherwise uv will fetch them
+          uv venv --python "$PYBIN" --system-site-packages .venv
           source .venv/bin/activate
 
-          # Install your project WITH dependencies + test extras
-          # (installs cupy-cuda12x and cuquantum-python-cu12 if missing)
+          # Install your package with its deps + test extras
           uv pip install ".[test]"
 
-          # Run tests
+          # Run the full test suite
           pytest -q
