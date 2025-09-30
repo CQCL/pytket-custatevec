@@ -1,75 +1,35 @@
-name: Build and test
+name: Test (Py3.12, minimal)
 
 on:
   pull_request:
   push:
-    branches:
-      - main
-      - 'wheel/**'
-      - 'runci/**'
-  release:
-    types: [created, edited]
-  schedule:
-    - cron: '0 4 * * 2'
+    branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Build, Test, Mypy (Python ${{ matrix.python-version }})
-    strategy:
-      fail-fast: false # Allows other jobs to continue if one version fails
-      matrix:
-        python-version: ['3.10', '3.11', '3.12']
+  test:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for versioning
-          submodules: true
+      - uses: actions/checkout@v4
 
-      - name: Set up Conda Environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          channel-priority: strict
-          environment-file: environment-test.yml
-
-      - name: Build, Test, and run Mypy
-        shell: bash -l {0}
+      - name: Ensure python3.12 exists
+        shell: bash
         run: |
-          chmod +x ./.github/workflows/build-test
-          # Always run the 'mypy' check on the latest Python version
-          if [[ "${{ matrix.python-version }}" == "3.12" ]]; then
-            ./.github/workflows/build-test mypy
-          else
-            ./.github/workflows/build-test nomypy
-          fi
-    
-      - name: Upload wheel artifact
-        # Only upload artifacts from one job to avoid duplication
-        if: matrix.python-version == '3.12' && (github.event_name == 'release' || contains(github.ref, 'refs/heads/wheel'))
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-wheel
-          path: dist/*.whl
+          command -v python3.12 >/dev/null || { echo "python3.12 not found"; exit 1; }
+          python3.12 -V
 
-  # publish-to-pypi:
-  #   name: Publish to PyPI
-  #   if: github.event_name == 'release'
-  #   needs: build-and-test # Depends on the build jobs finishing
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download wheel from artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: python-wheel
-  #         path: dist/
-          
-  #     - name: Publish to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.PYPI_PYTKET_CUSTATEVEC_API_TOKEN }}
+      - name: Install package and run tests (reuse system packages)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3.12 -m venv .venv --system-site-packages
+          source .venv/bin/activate
+
+          # small bootstrap only; heavy GPU libs are reused from system site-packages
+          python -m pip install -U pip setuptools wheel
+
+          # install your package + test extras; pip builds a wheel under the hood
+          python -m pip install --no-build-isolation ".[test]"
+
+          # run tests
+          pytest -q

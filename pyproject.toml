@@ -9,16 +9,19 @@ description = "Extension for pytket providing access to cuStateVec functionality
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-  { name = "Fabian Finger", email = "fabian.finger@quantinuum.com" },
+  { name = "Fabian Finger", email = "fabian.finger@quantinuum.com"},
   { name = "Gabriel Matos", email = "gabriel.matos@quantinuum.com"},
   { name = "Pranav Kalidindi", email = "pranav.kalidindi@quantinuum.com" },
 ]
 
-dependencies = ["pytket", "cupy-cuda12x", "cuquantum-python-cu12>=25.3.0"]
+dependencies = [
+  "pytket", 
+  "cupy-cuda12x", 
+  "cuquantum-python-cu12>=25.3.0"
+]
 
 [project.optional-dependencies]
 dev = [
-  "pytket-custatevec[test]",
   "pre-commit==4.3.0",
   "pytest==8.4.1",
   "sphinx==8.1.3",
