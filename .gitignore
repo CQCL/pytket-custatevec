@@ -28,3 +28,7 @@ jupyter_execute/
 .wget-hsts
 .idea
 test.ipynb
+docs/pyproject.toml
+docs/poetry.lock
+docs/quantinuum-sphinx/**
+docs/conf.py
