@@ -101,6 +101,7 @@ jobs:
           name: docs-site
           path: docs/build
 
+
   publish-testpypi:
     if: startsWith(github.ref, 'refs/tags/test-')
     needs: [test]
@@ -136,44 +137,37 @@ jobs:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
 
-  # publish:
-  #   # only run on tag pushes, and only if all test matrix jobs passed
-  #   if: startsWith(github.ref, 'refs/tags/v')
-  #   needs: [test]
-  #   runs-on: ubuntu-latest
+  publish-pypi:
+    # only run on tag pushes like v0.0.1, and only if all tests passed
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+      - name: Install uv
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          uv --version
 
-  #     - name: Install uv (no sudo)
-  #       shell: bash
-  #       run: |
-  #         set -euo pipefail
-  #         curl -LsSf https://astral.sh/uv/install.sh | sh
-  #         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-  #         uv --version
+      - name: Build dists (no pip needed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv python install 3.12
+          PYBIN="$(uv python find 3.12)"
+          uv venv --python "$PYBIN" .venv
+          # Build from pyproject
+          uv build
+          ls -l dist/
+          # Metadata sanity check without installing pip:
+          uvx twine check dist/*
 
-  #     - name: Ensure Python 3.12 for build
-  #       shell: bash
-  #       run: |
-  #         set -euo pipefail
-  #         uv python install 3.12
-  #         PYBIN="$(uv python find 3.12)"
-  #         echo "PYBIN=$PYBIN" >> $GITHUB_ENV
-
-  #     - name: Build distributions
-  #       shell: bash
-  #       run: |
-  #         set -euo pipefail
-  #         uv venv --python "$PYBIN" .venv
-  #         source .venv/bin/activate
-  #         # uv can build directly from pyproject
-  #         uv build
-  #         ls -l dist/
-
-      # - name: Publish to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_API_TOKEN }}
-          # By default it uploads dist/*
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
