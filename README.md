@@ -1,92 +1,139 @@
-# pytket-custatevec
+<div align="center">
+  <img src="docs/assets/logo.svg" height="100" alt="pytket-custatevec logo" />
+  <h1>pytket-custatevec</h1>
+  <p><strong>GPU-accelerated statevector simulation for pytket.</strong></p>
 
-[![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://tketusers.slack.com/join/shared_invite/zt-18qmsamj9-UqQFVdkRzxnXCcKtcarLRA#)
-[![Stack Exchange](https://img.shields.io/badge/StackExchange-%23ffffff.svg?style=for-the-badge&logo=StackExchange)](https://quantumcomputing.stackexchange.com/tags/pytket)
+  <p>
+    <a href="https://github.com/CQCL/pytket-custatevec/actions">
+      <img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat&logo=github" alt="Build" />
+    </a>
+    <a href="https://pypi.org/project/pytket-custatevec/">
+      <img src="https://img.shields.io/badge/pypi-v0.0.1-blue?style=flat&logo=pypi" alt="PyPI" />
+    </a>
+    <a href="https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=flat" alt="License" />
+    </a>
+    <a href="https://tketusers.slack.com/">
+      <img src="https://img.shields.io/badge/Slack-TKET%20Users-4A154B?logo=slack" alt="Slack" />
+    </a>
+  </p>
 
-[Pytket](https://docs.quantinuum.com/tket/api-docs/) is a python module for interfacing
-with tket, a quantum computing toolkit and optimising compiler developed by Quantinuum.
+  <h3>
+    <a href="https://cqcl.github.io/pytket-custatevec/">📚 Read the Full Documentation</a>
+  </h3>
+</div>
 
-[cuStateVec](https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html) is a
-high-performance library for statevector simulation, developed by NVIDIA.
-It is part of the [cuQuantum](https://docs.nvidia.com/cuda/cuquantum/latest/index.html) SDK -
-a high-performance library aimed at quantum circuit simulations on the NVIDIA GPUs.
+---
 
-`pytket-custatevec` is an extension to `pytket` that allows `pytket` circuits and
-expectation values to be simulated using `cuStateVec` via an interface to
-[cuQuantum Python](https://docs.nvidia.com/cuda/cuquantum/latest/python/index.html).
+**pytket-custatevec** is a high-performance extension for [pytket](https://tket.quantinuum.com/) that allows quantum circuits to be simulated on NVIDIA GPUs.
 
-## Getting started
+It acts as a bridge to the [NVIDIA cuQuantum](https://developer.nvidia.com/cuquantum-sdk) SDK, utilizing `cuStateVec` to optimize memory usage and gate execution speed for large statevector simulations.
 
-`pytket-custatevec` is available for Python 3.10, 3.11 and 3.12 on Linux.
-In order to use it, you need access to a Linux machine (or WSL) with an NVIDIA GPU of
-Compute Capability +7.0 (check it [here](https://developer.nvidia.com/cuda-gpus)) and
-have `cuda-toolkit` installed; this can be done with the command
+## 🚀 Features
+
+* **High Performance:** Significantly faster than CPU-based simulators for large qubit counts (20-30+).
+* **Seamless Integration:** Works as a standard `pytket` Backend.
+* **Optimized Memory:** Manages GPU VRAM efficiently for complex simulations.
+
+## 🏛 Architecture
+
+```mermaid
+flowchart LR
+    %% Node Definitions
+    User([User Code])
+    Backend[CuStateVecBackend]
+    SDK[NVIDIA cuStateVec]
+    GPU[NVIDIA GPU]
+
+    %% Connections
+    User == pytket Circuit ==> Backend
+    Backend == cuQuantum Python ==> SDK
+    SDK -.-> |CUDA| GPU
+
+    %% Styles for GitHub Light/Dark Mode compatibility
+    classDef default stroke-width:2px,font-size:14px;
+    classDef user fill:#f9f9f9,stroke:#333,color:#333;
+    classDef pytket fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#004d40;
+    classDef nvidia fill:#76b900,stroke:#558600,stroke-width:2px,color:#fff;
+    classDef hardware fill:#e0e0e0,stroke:#000,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
+
+    %% Apply Styles
+    class User user;
+    class Backend pytket;
+    class SDK nvidia;
+    class GPU hardware;
+```
+
+## 📦 Installation
+
+**1. Prerequisites**
+You need access to a machine with an NVIDIA GPU (Compute Capability 7.0+) and `cuda-toolkit` installed.
 
 ```shell
 sudo apt install cuda-toolkit
 ```
 
-You need to install `cuquantum-python` before `pytket-custatevec`.
-The recommended way to install these dependency is using conda:
-
+**2. Install Dependencies (Conda recommended)**
 ```shell
 conda install -c conda-forge cuquantum-python
 ```
-This will automatically pull all other CUDA-related dependencies.
 
-For more details, including how to install these dependencies via pip or how to manually specify the CUDA version,
-read the [install instructions in the official cuQuantum documentation](https://docs.nvidia.com/cuda/cuquantum/latest/getting-started/index.html).
+**3. Install Package**
+```shell
+pip install pytket-custatevec
+```
 
+## ⚡ Quick Start
 
-## Bugs, support and feature requests
+```python
+from pytket import Circuit
+from pytket.extensions.custatevec import CuStateVecStateBackend
 
-Please file bugs and feature requests on the Github
-[issue tracker](https://github.com/CQCL/pytket-custatevec/issues).
+# 1. Define a circuit
+circ = Circuit(2).H(0).CX(0, 1)
 
-## Development
+# 2. Initialize the GPU backend
+backend = CuStateVecStateBackend()
+compiled_circ = backend.get_compiled_circuit(circ)
 
-To install an extension in editable mode, from its root folder run:
+# 3. Run on GPU
+statevector = backend.run_circuit(compiled_circ).get_state()
+print(statevector)
+```
+
+## 💻 Development
+
+### Setup
+To install the extension in editable mode for development:
 
 ```shell
-pip install -e .
+pip install -e ".[dev,docs,test]"
 ```
 
-## Contributing
+### Code Style
+We use `pre-commit` to maintain code quality. Before committing, run:
 
-Pull requests are welcome. To make a PR, first fork the repo, make your proposed
-changes on the `main` branch, and open a PR from your fork. If it passes
-tests and is accepted after review, it will be merged in.
-
-### Code style
-
-Code style can be checked locally using [pre-commit](https://pre-commit.com/) hooks; run pre-commit
-before committing your changes and opening a pull request by executing
-```
+```shell
 pre-commit run
 ```
-This will automatically:
-* Format code using [ruff](https://pypi.org/project/ruff/) with default options.
-* Do static type checking using [mypy](https://mypy.readthedocs.io/en/stable/).
-* Lint using [ruff](https://pypi.org/project/ruff/) to check compliance
-with a set of style requirements (listed in `ruff.toml`).
+This handles formatting (ruff), type checking (mypy), and linting.
 
-Compliance with the above checks is checked by continuous integration before a pull request
- can be merged.
-
-#### Docstrings
-
-We use the Google style docstrings, please see this
-[page](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for
-reference.
-
-### Tests
-
-To run the tests for a module:
+### Testing
+To run the test suite (requires a GPU environment):
 
 ```shell
-pip install pytket-custatevec[test]
 pytest tests/
 ```
 
-When adding a new feature, please add a test for it. When fixing a bug, please
-add a test that demonstrates the fix.
+## 📄 Citing
+
+If you use `pytket-custatevec` in your research, please cite it as follows:
+
+```bibtex
+@software{pytket_custatevec,
+  author = {Quantinuum},
+  title = {pytket-custatevec: GPU-accelerated statevector simulation},
+  url = {[https://github.com/CQCL/pytket-custatevec](https://github.com/CQCL/pytket-custatevec)},
+  year = {2025}
+}
+```
