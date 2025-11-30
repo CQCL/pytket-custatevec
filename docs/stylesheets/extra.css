@@ -1,0 +1,82 @@
+/* Custom Grid for the People Page */
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Auto-scaling columns */
+    gap: 20px;
+    text-align: center;
+    margin: 2em 0;
+}
+
+.people-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The Magic: Makes the images round and same size */
+.people-profile img {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow like Pydantic */
+    margin-bottom: 10px;
+    transition: transform 0.2s; /* Cute hover effect */
+}
+
+.people-profile img:hover {
+    transform: scale(1.05);
+}
+
+.people-profile a {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--md-typeset-a-color);
+}
+
+/* Code Block - Monochrome Window Style */
+.md-typeset pre {
+    background-color: #242424; /* Slightly lighter than pure black */
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    padding-top: 35px !important; /* Space for the header */
+    position: relative;
+}
+
+/* Code Block - Monochrome Window Style */
+.md-typeset pre {
+    background-color: #242424; /* Slightly lighter than pure black */
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    padding-top: 35px !important; /* Space for the header */
+    position: relative;
+}
+
+/* The Monochrome "Buttons" */
+.md-typeset pre::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    /* The main dot (grey) */
+    background: rgba(255, 255, 255, 0.2); 
+    /* The other two dots created via box-shadow */
+    box-shadow: 18px 0 0 rgba(255, 255, 255, 0.2), 
+                36px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Optional: Subtle title bar line */
+.md-typeset pre::after {
+    content: "";
+    position: absolute;
+    top: 34px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+}

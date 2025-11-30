@@ -1,92 +1,80 @@
 # pytket-custatevec
 
-[![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://tketusers.slack.com/join/shared_invite/zt-18qmsamj9-UqQFVdkRzxnXCcKtcarLRA#)
-[![Stack Exchange](https://img.shields.io/badge/StackExchange-%23ffffff.svg?style=for-the-badge&logo=StackExchange)](https://quantumcomputing.stackexchange.com/tags/pytket)
+[![CI](https://img.shields.io/badge/build-passing-brightgreen?style=flat&logo=github)](https://github.com/CQCL/pytket-custatevec/actions)
+[![PyPI](https://img.shields.io/badge/pypi-v0.0.1-blue?style=flat&logo=pypi)](https://pypi.org/project/pytket-custatevec/)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat&logo=python)](https://pypi.org/project/pytket-custatevec/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green?style=flat)](https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE)
 
 **GPU-accelerated statevector simulation for pytket.**
 
-[Pytket](https://docs.quantinuum.com/tket/api-docs/) is a python module for interfacing with tket, a quantum computing toolkit and optimising compiler developed by Quantinuum.
-
-[cuStateVec](https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html) is a high-performance library for statevector simulation, developed by NVIDIA. It is part of the [cuQuantum](https://docs.nvidia.com/cuda/cuquantum/latest/index.html) SDK - a high-performance library aimed at quantum circuit simulations on the NVIDIA GPUs.
-
-`pytket-custatevec` is an extension to `pytket` that allows `pytket` circuits and expectation values to be simulated using `cuStateVec` via an interface to [cuQuantum Python](https://docs.nvidia.com/cuda/cuquantum/latest/python/index.html).
+`pytket-custatevec` acts as a bridge between Quantinuum's [pytket](https://tket.quantinuum.com/) compiler and NVIDIA's [cuQuantum](https://developer.nvidia.com/cuquantum-sdk) SDK, enabling massive speedups for statevector simulations.
 
 ---
 
-## Getting started
+## Why use this backend?
 
-`pytket-custatevec` is available for Python 3.10, 3.11 and 3.12 on Linux.
+<div class="grid cards" markdown>
 
-### Prerequisites
-In order to use it, you need access to a Linux machine (or WSL) with an **NVIDIA GPU of Compute Capability +7.0** (check it [here](https://developer.nvidia.com/cuda-gpus)) and have `cuda-toolkit` installed.
+-   :material-speedometer: **High Performance**
+    ---
+    Leverage NVIDIA GPUs to simulate quantum circuits significantly faster than CPU-based simulators, especially for entangling gates.
 
-```shell
-sudo apt install cuda-toolkit
+-   :material-layers-triple: **Seamless Integration**
+    ---
+    Works as a standard `pytket` Backend. Just switch your backend import, and your existing code runs on the GPU immediately.
+
+-   :material-memory: **Optimized Memory**
+    ---
+    Utilizes `cuStateVec`'s advanced memory management to handle large statevectors efficiently on GPU VRAM.
+
+-   :material-lock-pattern: **Gate Support**
+    ---
+    Supports the full range of standard gates, automatic implicit swaps, and complex measurement scenarios.
+
+</div>
+
+## Architecture
+
+This library sits directly on top of the NVIDIA cuQuantum stack.
+
+```mermaid
+graph LR
+    User[User Code] -->|pytket Circuit| Backend[CuStateVecBackend]
+    Backend -->|cuQuantum Python| SDK[NVIDIA cuStateVec]
+    SDK -->|CUDA| GPU[NVIDIA GPU]
+    
+    style User fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Backend fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style SDK fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style GPU fill:#212121,stroke:#000,stroke-width:2px,color:#fff
 ```
 
-### Installation
+## Quick Links
 
-You need to install `cuquantum-python` before `pytket-custatevec`. The recommended way to install this dependency is using conda:
+Not sure where to start?
 
-```shell
-conda install -c conda-forge cuquantum-python
-```
-*This will automatically pull all other CUDA-related dependencies.*
+<div class="grid cards" markdown>
 
-Once that is ready, install the package:
+-   **Get Started**
+    ---
+    Install the package and set up CUDA.
 
-```shell
-pip install pytket-custatevec
-```
+    [:octicons-arrow-right-24: Installation](installation.md)
 
-For more details, including how to install these dependencies via pip or how to manually specify the CUDA version, read the [install instructions in the official cuQuantum documentation](https://docs.nvidia.com/cuda/cuquantum/latest/getting-started/index.html).
+-   **See Examples**
+    ---
+    Run your first simulation or expectation value.
 
----
+    [:octicons-arrow-right-24: View Examples](examples/index.md)
 
-## Bugs, support and feature requests
+-   **API Reference**
+    ---
+    Deep dive into the Backend classes.
 
-Please file bugs and feature requests on the Github [issue tracker](https://github.com/CQCL/pytket-custatevec/issues).
+    [:octicons-arrow-right-24: Read API](api/index.md)
 
----
+</div>
 
-## Development
+## Bugs and Support
 
-To install an extension in editable mode, from its root folder run:
-
-```shell
-pip install -e .
-```
-
-### Contributing
-
-Pull requests are welcome. To make a PR, first fork the repo, make your proposed changes on the `main` branch, and open a PR from your fork. If it passes tests and is accepted after review, it will be merged in.
-
-### Code style
-
-Code style can be checked locally using [pre-commit](https://pre-commit.com/) hooks; run pre-commit before committing your changes and opening a pull request by executing:
-
-```shell
-pre-commit run
-```
-
-This will automatically:
-* Format code using [ruff](https://pypi.org/project/ruff/) with default options.
-* Do static type checking using [mypy](https://mypy.readthedocs.io/en/stable/).
-* Lint using [ruff](https://pypi.org/project/ruff/) to check compliance with a set of style requirements (listed in `ruff.toml`).
-
-Compliance with the above checks is checked by continuous integration before a pull request can be merged.
-
-#### Docstrings
-
-We use the Google style docstrings, please see this [page](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for reference.
-
-### Tests
-
-To run the tests for a module:
-
-```shell
-pip install "pytket-custatevec[test]"
-pytest tests/
-```
-
-When adding a new feature, please add a test for it. When fixing a bug, please add a test that demonstrates the fix.
+Please file bugs and feature requests on the [GitHub Issue Tracker](https://github.com/CQCL/pytket-custatevec/issues).

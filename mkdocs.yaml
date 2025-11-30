@@ -1,47 +1,164 @@
+# ==============================================================================
+# PROJECT METADATA
+# ==============================================================================
 site_name: pytket-custatevec
 site_url: https://cqcl.github.io/pytket-custatevec/
 repo_url: https://github.com/CQCL/pytket-custatevec
 repo_name: CQCL/pytket-custatevec
 
-nav:
-  - Home: index.md
-  - API Reference: api.md
+# Adds a "Copyright 202X Quantinuum" footer
+copyright: Copyright &copy; 2025 Quantinuum
 
-# The "NVIDIA x Quantinuum" Aesthetic
+# Adds the "Pencil" icon to allow users to edit pages on GitHub
+edit_uri: edit/main/docs/
+
+# ==============================================================================
+# NAVIGATION STRUCTURE
+# ==============================================================================
+nav:
+  - Overview: index.md
+  - Installation: installation.md
+  - Examples:
+      - Overview: examples/index.md
+      - Simulation: examples/simulation.md
+      - Basis Order: examples/advanced.md
+  - API Reference:
+      - Overview: api/index.md
+      - StateBackend: api/state_backend.md
+      - ShotsBackend: api/shots_backend.md
+  - Development:
+      - Contributing: contributing.md
+      - Team: people.md
+
+# ==============================================================================
+# THEME CONFIGURATION
+# ==============================================================================
 theme:
   name: material
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - content.code.copy
-  palette:
-    # Dark Mode (Default)
-    - scheme: slate
-      primary: black
-      accent: lime  # NVIDIA Green
+  
+  # Branding Icons
+  icon:
+    logo: material/memory              # Top-left logo (Memory Chip)
+    repo: fontawesome/brands/github    # Top-right repo icon
+
+  # Color Palette (Tri-State Toggle: Auto / Light / Dark)
+  palette: 
+    - media: "(prefers-color-scheme)"
       toggle:
-        icon: material/brightness-4
+        icon: material/brightness-auto
         name: Switch to light mode
-    # Light Mode
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: teal
-      accent: purple
+      accent: deep purple
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: lime
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
 
+  # Typography
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  # Feature Flags
+  features:
+    # Navigation UX
+    - navigation.tabs              # Top-level tabs
+    - navigation.tabs.sticky       # Tabs stay visible on scroll
+    - navigation.sections          # Sidebar groups
+    - navigation.top               # "Back to Top" button
+    - navigation.tracking          # Update URL while scrolling
+    - navigation.instant           # SPA-like feel (no page reloads)
+    - navigation.instant.prefetch  # Load pages on hover for speed
+    
+    # Content UX
+    - toc.follow                   # Table of Contents follows scroll
+    - content.code.copy            # Copy-to-clipboard button
+    - content.code.annotate        # "Plus" buttons for code comments
+    - content.tooltips             # Hover tooltips
+    - content.action.edit          # "Edit this page" button
+    
+    # Search UX (Added these)
+    - search.suggest               # Autocomplete search
+    - search.highlight             # Highlight search results on page
+    - search.share                 # Share button for deep links
+
+# ==============================================================================
+# SOCIAL LINKS
+# ==============================================================================
+social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/CQCL/pytket-custatevec
+  - icon: fontawesome/brands/slack
+    link: https://tketusers.slack.com/
+  - icon: fontawesome/brands/stack-exchange
+    link: https://quantumcomputing.stackexchange.com/tags/pytket
+
+# ==============================================================================
+# PLUGINS
+# ==============================================================================
 plugins:
   - search
   - mkdocstrings:
       handlers:
         python:
-          paths: ["."] # <--- CRITICAL: Tells it to look in root for 'pytket' folder
+          paths: ["."]
           options:
             show_root_heading: true
             show_source: true
 
+# ==============================================================================
+# MARKDOWN EXTENSIONS
+# ==============================================================================
 markdown_extensions:
+  # Standard blocks
   - admonition
+  - attr_list
+  - md_in_html
+  
+  # Code highlighting & Nesting
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:          # Handles Mermaid & nested blocks
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # Content organization
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true 
+  
+  # Import code from files (Pro Feature)
+  - pymdownx.snippets:
+      check_paths: true
+
+  # Math & Emoji
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+# ==============================================================================
+# CUSTOM ASSETS & CONFIG
+# ==============================================================================
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  version:
+    provider: mike
