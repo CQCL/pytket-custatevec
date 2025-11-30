@@ -16,11 +16,21 @@
   </h3>
 </div>
 
-<div align="center">
-  **Navigate:**
-  | [🚀 Features](#--features) | [📦 Installation](#-installation) | [⚡ Quick Start](#-quick-start) | [💻 Development](#-development) | [📄 Citing](#-citing) |
-</div>
-<br>
+---
+
+<p align="center">
+  <small>
+    <a href="#features" style="font-weight: 600;">🚀 Features</a>
+    &nbsp; &bull; &nbsp;
+    <a href="#installation" style="font-weight: 600;">📦 Installation</a>
+    &nbsp; &bull; &nbsp;
+    <a href="#quick-start" style="font-weight: 600;">⚡ Quick Start</a>
+    &nbsp; &bull; &nbsp;
+    <a href="#development" style="font-weight: 600;">💻 Development</a>
+    &nbsp; &bull; &nbsp;
+    <a href="#citing" style="font-weight: 600;">📄 Citing</a>
+  </small>
+</p>
 
 ---
 
