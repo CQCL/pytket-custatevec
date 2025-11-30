@@ -1,0 +1,47 @@
+site_name: pytket-custatevec
+site_url: https://cqcl.github.io/pytket-custatevec/
+repo_url: https://github.com/CQCL/pytket-custatevec
+repo_name: CQCL/pytket-custatevec
+
+nav:
+  - Home: index.md
+  - API Reference: api.md
+
+# The "NVIDIA x Quantinuum" Aesthetic
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+  palette:
+    # Dark Mode (Default)
+    - scheme: slate
+      primary: black
+      accent: lime  # NVIDIA Green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    # Light Mode
+    - scheme: default
+      primary: teal
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."] # <--- CRITICAL: Tells it to look in root for 'pytket' folder
+          options:
+            show_root_heading: true
+            show_source: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
