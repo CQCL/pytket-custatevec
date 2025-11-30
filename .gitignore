@@ -12,23 +12,15 @@ dist
 .mypy_cache
 .hypothesis
 obj
-docs/extensions
 .ipynb_checkpoints
-# nix artifacts
 result
 .direnv
 .envrc
 .venv
-docs/pyproject.toml
-docs/poetry.lock
 .jupyter_cache/
 jupyter_execute/
 .vscode-server
 .lightning_studio
 .wget-hsts
 .idea
-test.ipynb
-docs/pyproject.toml
-docs/poetry.lock
-docs/quantinuum-sphinx/**
-docs/conf.py
+site/

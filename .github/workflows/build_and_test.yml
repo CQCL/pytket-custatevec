@@ -1,4 +1,4 @@
-name: Test (uv, 3.12 & 3.11 & 3.10)
+name: CI / Docs / Deploy
 
 on:
   pull_request:
@@ -7,6 +7,10 @@ on:
     tags: [ "v*", "test-*" ]
 
 jobs:
+  # ==========================================================================
+  # 1. TEST JOB (Self-Hosted GPU Runner)
+  #    - Respects system packages (CUDA/CuPy) to save bandwidth/time
+  # ==========================================================================
   test:
     runs-on: self-hosted
     strategy:
@@ -15,122 +19,113 @@ jobs:
         include:
           - py: "python3.12"
             ver: "3.12"
+          # Uncomment when ready:
           # - py: "python3.11"
           #   ver: "3.11"
           # - py: "python3.10"
           #   ver: "3.10"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - name: Install uv (no sudo)
+      # 1. Install uv (Lightweight, single binary)
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # 2. Locate Python (Prefer System, Fallback to Managed)
+      - name: Locate ${{ matrix.py }}
         shell: bash
         run: |
           set -euo pipefail
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          uv --version
+          if command -v ${{ matrix.py }} >/dev/null 2>&1; then
+            echo "✅ Found system ${{ matrix.py }}"
+            echo "PYTHON_PATH=$(command -v ${{ matrix.py }})" >> $GITHUB_ENV
+          else
+            echo "⚠️ System ${{ matrix.py }} not found. Installing managed version..."
+            uv python install ${{ matrix.ver }}
+            echo "PYTHON_PATH=$(uv python find ${{ matrix.ver }})" >> $GITHUB_ENV
+          fi
 
-      # - name: Ensure ${{ matrix.py }} exists (install locally if missing)
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     if ! command -v ${{ matrix.py }} >/dev/null 2>&1; then
-      #       echo "${{ matrix.py }} not found; installing locally with uv..."
-      #       uv python install "${{ matrix.ver }}"
-      #     fi
-      #     ${{ matrix.py }} -V
+      # 3. Create Environment & Test
+      - name: Install & Test
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          # --system-site-packages allows uv to link against pre-installed CUDA libs
+          uv venv --python "$PYTHON_PATH" --system-site-packages .venv
+          source .venv/bin/activate
 
-      # - name: Create venv, install deps, run tests
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     PYBIN="$(uv python find '${{ matrix.ver }}')"
-      #     echo "Using interpreter: $PYBIN"
+          # Install package + test suite
+          # uv will skip downloading heavy wheels if system packages satisfy requirements
+          uv pip install ".[test]"
 
-      #     # Reuse preinstalled libs if present; otherwise uv will fetch them
-      #     uv venv --python "$PYBIN" --system-site-packages .venv
-      #     source .venv/bin/activate
+          pytest -q
 
-      #     # Install your package with deps + test extras
-      #     uv pip install ".[test]"
-
-      #     # Run the full test suite
-      #     pytest -q
-
-
+  # ==========================================================================
+  # 2. DOCS JOB (Standard Runner - No GPU)
+  #    - Builds from scratch on Ubuntu
+  #    - Deploys using standard MkDocs (No Mike/Versioning yet)
+  # ==========================================================================
   docs:
-    name: Build docs (submodules)
-    needs: [test]             # optional
+    name: Build & Deploy Docs
+    needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required for pushing to gh-pages branch
+    
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive   # pulls pytket-docs-theming AND its quantinuum-sphinx submodule
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Setup Python & Poetry
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install Poetry
-        shell: bash
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install Docs Dependencies
         run: |
-          python -m pip install --user poetry
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          poetry --version
+          uv venv
+          source .venv/bin/activate
+          # Installs mkdocs, material, mkdocstrings from your 'docs' group
+          uv pip install ".[docs]"
 
-      - name: Build docs
-        shell: bash
+      - name: Build Docs (Validation)
         run: |
-          set -euo pipefail
-          cd docs
-          # installs the docs toolchain (Sphinx etc.) into Poetry's env as defined by the theme
-          bash install.sh
+          source .venv/bin/activate
+          # Strict mode (-s) ensures no broken links/warnings
+          mkdocs build -s
 
-          # install your package into that same Poetry env
-          poetry run pip install ../.
+      - name: Deploy (Main Only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          source .venv/bin/activate
+          git config user.name ci-bot
+          git config user.email ci-bot@quantinuum.com
+          
+          # Standard deployment (overwrites previous version)
+          mkdocs gh-deploy --force
 
-          # run the build script INSIDE the Poetry env so 'sphinx-build' is available
-          poetry run bash build-docs.sh
-
-          ls -l build/
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: docs-site
-          path: docs/build
-
-
+  # ==========================================================================
+  # 3. PUBLISH JOBS (TestPyPI & PyPI)
+  # ==========================================================================
   publish-testpypi:
     if: startsWith(github.ref, 'refs/tags/test-')
     needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        shell: bash
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Build
         run: |
-          set -euo pipefail
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          uv --version
-
-      - name: Build dists (no pip needed)
-        shell: bash
-        run: |
-          set -euo pipefail
           uv python install 3.12
-          PYBIN="$(uv python find 3.12)"
-          uv venv --python "$PYBIN" .venv
-          # You don't even need to activate the venv to build:
           uv build
-          ls -l dist/
-          # Metadata sanity check without installing pip:
           uvx twine check dist/*
-
-      - name: Upload to TestPyPI
+      - name: Upload
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -138,35 +133,20 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-pypi:
-    # only run on tag pushes like v0.0.1, and only if all tests passed
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        shell: bash
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Build
         run: |
-          set -euo pipefail
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          uv --version
-
-      - name: Build dists (no pip needed)
-        shell: bash
-        run: |
-          set -euo pipefail
           uv python install 3.12
-          PYBIN="$(uv python find 3.12)"
-          uv venv --python "$PYBIN" .venv
-          # Build from pyproject
           uv build
-          ls -l dist/
-          # Metadata sanity check without installing pip:
           uvx twine check dist/*
-
-      - name: Upload to PyPI
+      - name: Upload
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

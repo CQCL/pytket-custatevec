@@ -21,14 +21,23 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Core development tools (Linting, Formatting, Typing)
 dev = [
-  "pre-commit==4.4.0",
-  "pytest==9.0.0",
-  "sphinx==8.1.3",
-  "ruff==0.14.4",
-  "mypy==1.18.2",
+  "pre-commit>=4.4.0",
+  "pytest>=8.4.0",
+  "ruff>=0.14.0",
+  "mypy>=1.18.0",
 ]
 
+# Documentation tools (Matches your CI workflow)
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocstrings[python]",
+  "mike",  # For versioning
+]
+
+# Dependencies required to run the full test suite
 test = [
   "pytest",
   "pytket-qiskit",
