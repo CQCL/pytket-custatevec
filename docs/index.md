@@ -1,11 +1,37 @@
-# pytket-custatevec
+---
+hide:
+  - navigation
+  - toc
+edit_uri: ""
+---
 
-[![CI](https://img.shields.io/badge/build-passing-brightgreen?style=flat&logo=github)](https://github.com/CQCL/pytket-custatevec/actions)
-[![PyPI](https://img.shields.io/badge/pypi-v0.0.1-blue?style=flat&logo=pypi)](https://pypi.org/project/pytket-custatevec/)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat&logo=python)](https://pypi.org/project/pytket-custatevec/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-green?style=flat)](https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE)
+<div class="hero-container">
+  
+  <div class="hero-title-group">
+    <img src="assets/logo.svg" alt="Logo" class="hero-logo-small">
+    <h1>pytket-custatevec</h1>
+  </div>
 
-**GPU-accelerated statevector simulation for pytket.**
+  <p class="tagline">The blazingly fast GPU backend for quantum statevector simulation.</p>
+  
+  <div class="hero-actions">
+    <a href="installation/" class="btn btn-primary">Get Started</a>
+    <a href="examples/" class="btn btn-secondary">View Examples</a>
+  </div>`
+
+</div>
+
+<div class="external-badges">
+  <a href="https://github.com/CQCL/pytket-custatevec/actions">
+    <img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat&logo=github" alt="Build">
+  </a>
+  <a href="https://pypi.org/project/pytket-custatevec/">
+    <img src="https://img.shields.io/badge/pypi-v0.0.1-blue?style=flat&logo=pypi" alt="PyPI">
+  </a>
+  <a href="https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=flat" alt="License">
+  </a>
+</div>
 
 `pytket-custatevec` acts as a bridge between Quantinuum's [pytket](https://tket.quantinuum.com/) compiler and NVIDIA's [cuQuantum](https://developer.nvidia.com/cuquantum-sdk) SDK, enabling massive speedups for statevector simulations.
 
@@ -38,42 +64,39 @@
 This library sits directly on top of the NVIDIA cuQuantum stack.
 
 ```mermaid
-graph LR
-    User[User Code] -->|pytket Circuit| Backend[CuStateVecBackend]
-    Backend -->|cuQuantum Python| SDK[NVIDIA cuStateVec]
-    SDK -->|CUDA| GPU[NVIDIA GPU]
+flowchart LR
+    %% Node Definitions
+    User([User Code])
+    Backend[CuStateVecBackend]
+    SDK[NVIDIA cuStateVec]
+    GPU[NVIDIA GPU]
+
+    %% Connections
+    User == pytket Circuit ==> Backend
+    Backend == cuQuantum Python ==> SDK
+    SDK -.-> |CUDA| GPU
+
+    %% Styling Classes
+    classDef default stroke-width:2px,font-size:14px;
     
-    style User fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style Backend fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
-    style SDK fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style GPU fill:#212121,stroke:#000,stroke-width:2px,color:#fff
+    %% User Style
+    classDef user fill:#f9f9f9,stroke:#333,color:#333;
+    
+    %% Pytket Backend Style (Teal Border)
+    classDef pytket fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#004d40;
+    
+    %% NVIDIA SDK Style (NVIDIA Green)
+    classDef nvidia fill:#76b900,stroke:#558600,stroke-width:2px,color:#fff;
+    
+    %% Hardware Style (Silver Metal - Readable)
+    classDef hardware fill:#e0e0e0,stroke:#000,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
+
+    %% Apply Styles
+    class User user;
+    class Backend pytket;
+    class SDK nvidia;
+    class GPU hardware;
 ```
-
-## Quick Links
-
-Not sure where to start?
-
-<div class="grid cards" markdown>
-
--   **Get Started**
-    ---
-    Install the package and set up CUDA.
-
-    [:octicons-arrow-right-24: Installation](installation.md)
-
--   **See Examples**
-    ---
-    Run your first simulation or expectation value.
-
-    [:octicons-arrow-right-24: View Examples](examples/index.md)
-
--   **API Reference**
-    ---
-    Deep dive into the Backend classes.
-
-    [:octicons-arrow-right-24: Read API](api/index.md)
-
-</div>
 
 ## Bugs and Support
 

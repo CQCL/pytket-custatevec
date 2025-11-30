@@ -26,6 +26,7 @@ nav:
       - Overview: api/index.md
       - StateBackend: api/state_backend.md
       - ShotsBackend: api/shots_backend.md
+      - Supported Gates: gates.md
   - Development:
       - Contributing: contributing.md
       - Team: people.md
@@ -35,11 +36,11 @@ nav:
 # ==============================================================================
 theme:
   name: material
+
+  logo: assets/logo.svg  # <--- Points to your new file
+  favicon: assets/logo.svg # Use it for the browser tab too!
   
   # Branding Icons
-  icon:
-    logo: material/memory              # Top-left logo (Memory Chip)
-    repo: fontawesome/brands/github    # Top-right repo icon
 
   # Color Palette (Tri-State Toggle: Auto / Light / Dark)
   palette: 
