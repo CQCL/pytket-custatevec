@@ -40,7 +40,7 @@ It acts as a bridge to the [NVIDIA cuQuantum](https://developer.nvidia.com/cuqua
 
 ## 🚀 Features
 
-* **High Performance:** Significantly faster than CPU-based simulators for large qubit counts (20-30+).
+* **High Performance:** Designed for rapid simulation of quantum circuits using parallel GPU architecture.
 * **Seamless Integration:** Works as a standard `pytket` Backend.
 * **Optimized Memory:** Manages GPU VRAM efficiently for complex simulations.
 
