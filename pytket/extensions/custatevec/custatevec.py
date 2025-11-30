@@ -20,17 +20,15 @@ from .utils import INSTALL_CUDA_ERROR_MESSAGE
 
 try:
     import cupy as cp
-    from cuquantum import ComputeType
     from cuquantum.bindings import custatevec as cusv
     from cuquantum.bindings._utils import cudaDataType
-    from cuquantum.bindings.custatevec import StateVectorType
+    from cuquantum.bindings.custatevec import Pauli, StateVectorType
 except ImportError as _cuda_import_err:
     raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(getattr(_cuda_import_err, "name", None))) from _cuda_import_err
 
 import numpy as np
-
+import pytket.pauli
 from pytket.circuit import OpType, Qubit
-from pytket.extensions.custatevec.gate_classes import CuStateVecMatrix
 from pytket.utils.operators import QubitPauliOperator
 
 from .apply import (
@@ -38,7 +36,6 @@ from .apply import (
     apply_pauli_rotation,
     pytket_paulis_to_custatevec_paulis,
 )
-from .dtype import cuquantum_to_np_dtype
 from .gate_definitions import get_gate_matrix, get_uncontrolled_gate
 from .logger import set_logger
 from .statevector import CuStateVector
@@ -56,6 +53,18 @@ _initial_statevector_dict: dict[str, StateVectorType] = {
     "ghz": StateVectorType.GHZ,
     "w": StateVectorType.W,
 }
+
+
+def _cast_pauli(op: pytket.pauli.Pauli) -> Pauli:
+    if op == pytket.pauli.Pauli.I:
+        return Pauli.I
+    if op == pytket.pauli.Pauli.X:
+        return Pauli.X
+    if op == pytket.pauli.Pauli.Y:
+        return Pauli.Y
+    if op == pytket.pauli.Pauli.Z:
+        return Pauli.Z
+    raise ValueError(f"Unknown Pauli operator: {op}")
 
 
 def initial_statevector(
@@ -203,64 +212,55 @@ def compute_expectation(
     statevector: CuStateVector,
     operator: QubitPauliOperator,
     circuit: Circuit,
-    matrix_dtype: cudaDataType | None = None,
     loglevel: int = logging.WARNING,
     logfile: str | None = None,
-) -> np.float64:
-    """Compute the expectation value of a QubitPauliOperator on a CuStateVector.
-
-    Args:
-        handle (CuStateVecHandle): cuStateVec handle.
-        statevector (CuStateVector): The state vector on which to compute the exp. val.
-        operator (QubitPauliOperator): The operator for which to compute the exp. val.
-        circuit (Circuit): The circuit associated with the state vector.
-        matrix_dtype (cudaDataType, optional): The CUDA data type for operator matrix.
-            Defaults to None, which uses CUDA_C_64F.
-        loglevel (int, optional): Logging level. Defaults to logging.WARNING.
-        logfile (str, optional): Log file path. Defaults to None, which uses console.
-
-    Returns:
-        np.complex128: The expectation value of the operator on the state vector.
-    """
+) -> float | complex: # Update return type hint
+    """Compute the expectation value of a QubitPauliOperator on a CuStateVector."""
     if not isinstance(operator, QubitPauliOperator):
         raise TypeError("operator must be a QubitPauliOperator")
     if not isinstance(statevector, CuStateVector):
         raise TypeError("statevector must be a CuStateVector")
 
-    if matrix_dtype is None:
-        matrix_dtype = cudaDataType.CUDA_C_64F
     _logger = set_logger("ComputeExpectation", level=loglevel, file=logfile)
 
-    # Convert the operator to a sparse matrix and create a CuStateVecMatrix
-    dtype = cuquantum_to_np_dtype(matrix_dtype)
-    matrix_array = operator.to_sparse_matrix().toarray()
-    matrix = CuStateVecMatrix(
-        cp.array(matrix_array, dtype=dtype),
-        matrix_dtype,
-    )
+    # Map qubits to basis bits
     _qubit_idx_map: dict[Qubit, int] = {q: i for i, q in enumerate(sorted(circuit.qubits, reverse=True))}
-    # Match cuStateVec's little-endian convention: Sort basis bits in LSB-to-MSB order
-    # Basis bits: indices of the qubits you want the operator to act upon
-    basis_bits = [_qubit_idx_map[x] for x in operator.all_qubits]
 
-    expectation_value = np.empty(1, dtype=np.complex128)
+    # Collect Pauli terms, basis bits, and coefficients for each string in the operator
+    pauli_ops: list[list[Pauli]] = []
+    basis_bits: list[list[int]] = []
+
+    coefficients: list[complex] = []
+
+    for string, coefficient in operator._dict.items():  # noqa: SLF001
+        # Convert sympy expression to complex
+        coefficients.append(complex(coefficient.evalf()))
+
+        operators = list(string.map.items())
+        pauli_ops.append([_cast_pauli(op) for _, op in operators] or [Pauli.I])
+        basis_bits.append([_qubit_idx_map[q] for q, _ in operators] or [min(_qubit_idx_map.values())])
+
+    # Container for expectation values of each string
+    # Note: Pauli string expectation values are always Real (Hermitian), so float64 is correct here for CUDA
+    expectation_values = np.empty(len(coefficients), dtype=np.float64)
 
     with handle.stream:
-        cusv.compute_expectation(
+        cusv.compute_expectations_on_pauli_basis(
             handle=handle.handle,
             sv=statevector.array.data.ptr,
             sv_data_type=statevector.cuda_dtype,
             n_index_bits=statevector.n_qubits,
-            expectation_value=expectation_value.ctypes.data,  # requires **host** pointer
-            expectation_data_type=cudaDataType.CUDA_C_64F,
-            matrix=matrix.matrix.data.ptr,
-            matrix_data_type=matrix.cuda_dtype,
-            layout=cusv.MatrixLayout.COL,  # COL -> correct phase for complex exp. val. and correct exp. values
-            basis_bits=basis_bits,
-            n_basis_bits=len(basis_bits),
-            compute_type=ComputeType.COMPUTE_DEFAULT,
-            extra_workspace=0,
-            extra_workspace_size_in_bytes=0,
+            expectation_values=expectation_values.ctypes.data,
+            pauli_operators_array=pauli_ops,
+            n_pauli_operator_arrays=len(pauli_ops),
+            basis_bits_array=basis_bits,
+            n_basis_bits_array=[len(b) for b in basis_bits],
         )
     handle.stream.synchronize()
-    return expectation_value[0]
+
+    # Compute the weighted sum of expectation values
+    # This dot product will now correctly handle (Complex * Real) -> Complex
+    expectation_value = np.dot(coefficients, expectation_values)
+
+    # Return the full result (likely complex if coefficients were complex)
+    return expectation_value
