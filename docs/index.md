@@ -12,12 +12,12 @@ edit_uri: ""
     <h1>pytket-custatevec</h1>
   </div>
 
-  <p class="tagline">The blazingly fast GPU backend for quantum statevector simulation.</p>
+  <p class="tagline">The GPU backend for pytket circuit simulation.</p>
   
   <div class="hero-actions">
     <a href="installation/" class="btn btn-primary">Get Started</a>
     <a href="examples/" class="btn btn-secondary">View Examples</a>
-  </div>`
+  </div>
 
 </div>
 
@@ -30,6 +30,12 @@ edit_uri: ""
   </a>
   <a href="https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=flat" alt="License">
+  </a>
+  <a href="https://tketusers.slack.com/">
+      <img src="https://img.shields.io/badge/Slack-TKET%20Users-4A154B?logo=slack" alt="Slack">
+  </a>
+  <a href="https://quantumcomputing.stackexchange.com/questions/tagged/pytket">
+      <img src="https://img.shields.io/badge/StackExchange-pytket-blue?logo=stackexchange" alt="StackExchange">
   </a>
 </div>
 
@@ -53,10 +59,6 @@ edit_uri: ""
     ---
     Utilizes `cuStateVec`'s advanced memory management to handle large statevectors efficiently on GPU VRAM.
 
--   :material-lock-pattern: **Gate Support**
-    ---
-    Supports the full range of standard gates, automatic implicit swaps, and complex measurement scenarios.
-
 </div>
 
 ## Architecture
@@ -76,22 +78,7 @@ flowchart LR
     Backend == cuQuantum Python ==> SDK
     SDK -.-> |CUDA| GPU
 
-    %% Styling Classes
-    classDef default stroke-width:2px,font-size:14px;
-    
-    %% User Style
-    classDef user fill:#f9f9f9,stroke:#333,color:#333;
-    
-    %% Pytket Backend Style (Teal Border)
-    classDef pytket fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#004d40;
-    
-    %% NVIDIA SDK Style (NVIDIA Green)
-    classDef nvidia fill:#76b900,stroke:#558600,stroke-width:2px,color:#fff;
-    
-    %% Hardware Style (Silver Metal - Readable)
-    classDef hardware fill:#e0e0e0,stroke:#000,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
-
-    %% Apply Styles
+    %% Assign Classes (CSS will handle the colors)
     class User user;
     class Backend pytket;
     class SDK nvidia;
@@ -101,3 +88,16 @@ flowchart LR
 ## Bugs and Support
 
 Please file bugs and feature requests on the [GitHub Issue Tracker](https://github.com/CQCL/pytket-custatevec/issues).
+
+<!-- ## Citing
+
+If you use `pytket-custatevec` in your research, please cite it as follows:
+
+```bibtex
+@software{pytket_custatevec,
+  author = {Quantinuum},
+  title = {pytket-custatevec: GPU-accelerated statevector simulation},
+  url = {[https://github.com/CQCL/pytket-custatevec](https://github.com/CQCL/pytket-custatevec)},
+  year = {2025}
+}
+``` -->

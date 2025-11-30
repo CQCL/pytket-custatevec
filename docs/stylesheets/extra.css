@@ -239,3 +239,150 @@ mjx-container {
     display: table !important;
     width: 100% !important;
 }
+
+/* ==========================================================================
+   8. DARK MODE ADJUSTMENTS
+   ========================================================================== */
+
+/* Target the Slate (Dark) theme specifically */
+[data-md-color-scheme="slate"] .hero-container {
+    /* Change the gradient: Dark Teal -> Transparent (instead of White) */
+    background: linear-gradient(180deg, rgba(0, 128, 128, 0.15) 0%, rgba(0, 0, 0, 0) 100%);
+    
+    /* Darken the border so it's subtle against the black background */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Optional: Make the logo shadow lighter/glowy in dark mode */
+[data-md-color-scheme="slate"] .hero-logo-small {
+    filter: drop-shadow(0 0 15px rgba(0, 128, 128, 0.6));
+}
+
+/* ==========================================================================
+   9. DIAGRAM VARIABLES (Light/Dark Mode)
+   ========================================================================== */
+
+/* LIGHT MODE */
+[data-md-color-scheme="default"] {
+    /* Node Colors */
+    --dia-user-bg: #F5F5F5;
+    --dia-user-stroke: #333333;
+    --dia-user-text: #000000;
+
+    --dia-pytket-bg: #E0F2F1;
+    --dia-pytket-stroke: #00695C;
+    --dia-pytket-text: #004D40;
+
+    --dia-nvidia-bg: #F1F8E9;
+    --dia-nvidia-stroke: #76B900;
+    --dia-nvidia-text: #33691E;
+
+    --dia-hw-bg: #FAFAFA;
+    --dia-hw-stroke: #000000;
+    --dia-hw-text: #000000;
+
+    /* Edge Labels (Arrows) */
+    --dia-edge-text: #333333;
+    --dia-edge-bg: #FFFFFF; /* White background for arrow text */
+}
+
+/* DARK MODE */
+[data-md-color-scheme="slate"] {
+    /* Node Colors */
+    --dia-user-bg: #37474F;
+    --dia-user-stroke: #B0BEC5; /* Lighter stroke for visibility */
+    --dia-user-text: #FFFFFF;   /* Force White */
+
+    --dia-pytket-bg: #004D40;
+    --dia-pytket-stroke: #80CBC4;
+    --dia-pytket-text: #FFFFFF; /* Force White */
+
+    --dia-nvidia-bg: #558B2F;   /* Slightly darker green for text contrast */
+    --dia-nvidia-stroke: #AED581;
+    --dia-nvidia-text: #FFFFFF; /* Force White */
+
+    --dia-hw-bg: #121212;
+    --dia-hw-stroke: #E0E0E0;
+    --dia-hw-text: #FFFFFF;     /* Force White */
+
+    /* Edge Labels (Arrows) */
+    --dia-edge-text: #E0E0E0;   /* Light Grey text */
+    --dia-edge-bg: #1e1e1e;     /* Match the Slate background */
+}
+
+/* ==========================================================================
+   10. MERMAID BINDINGS (Apply Variables to Graph)
+   ========================================================================== */
+
+/* 1. USER NODE (Class: user) */
+.mermaid .node.user rect,
+.mermaid .node.user polygon,
+.mermaid .node.user path {
+    fill: var(--dia-user-bg) !important;
+    stroke: var(--dia-user-stroke) !important;
+    stroke-width: 2px !important;
+}
+/* Force Text Color (SVG + HTML) */
+.mermaid .node.user text, 
+.mermaid .node.user span, 
+.mermaid .node.user .label {
+    fill: var(--dia-user-text) !important;   /* SVG text color */
+    color: var(--dia-user-text) !important;  /* HTML text color */
+}
+
+/* 2. PYTKET BACKEND (Class: pytket) */
+.mermaid .node.pytket rect,
+.mermaid .node.pytket polygon {
+    fill: var(--dia-pytket-bg) !important;
+    stroke: var(--dia-pytket-stroke) !important;
+    stroke-width: 2px !important;
+}
+.mermaid .node.pytket text, 
+.mermaid .node.pytket span, 
+.mermaid .node.pytket .label {
+    fill: var(--dia-pytket-text) !important;
+    color: var(--dia-pytket-text) !important;
+}
+
+/* 3. NVIDIA SDK (Class: nvidia) */
+.mermaid .node.nvidia rect,
+.mermaid .node.nvidia polygon {
+    fill: var(--dia-nvidia-bg) !important;
+    stroke: var(--dia-nvidia-stroke) !important;
+    stroke-width: 2px !important;
+}
+.mermaid .node.nvidia text, 
+.mermaid .node.nvidia span, 
+.mermaid .node.nvidia .label {
+    fill: var(--dia-nvidia-text) !important;
+    color: var(--dia-nvidia-text) !important;
+}
+
+/* 4. HARDWARE (Class: hardware) */
+.mermaid .node.hardware rect,
+.mermaid .node.hardware polygon {
+    fill: var(--dia-hw-bg) !important;
+    stroke: var(--dia-hw-stroke) !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 5 5;
+}
+.mermaid .node.hardware text, 
+.mermaid .node.hardware span, 
+.mermaid .node.hardware .label {
+    fill: var(--dia-hw-text) !important;
+    color: var(--dia-hw-text) !important;
+}
+
+/* 5. EDGE LABELS (The text on arrows) */
+.mermaid .edgeLabel {
+    background-color: var(--dia-edge-bg) !important;
+    color: var(--dia-edge-text) !important;
+}
+.mermaid .edgeLabel rect {
+    fill: var(--dia-edge-bg) !important;
+    opacity: 1 !important;
+}
+.mermaid .edgeLabel span {
+    background-color: var(--dia-edge-bg) !important;
+    color: var(--dia-edge-text) !important;
+}
