@@ -1,0 +1,35 @@
+/* Custom Grid for the People Page */
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Auto-scaling columns */
+    gap: 20px;
+    text-align: center;
+    margin: 2em 0;
+}
+
+.people-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The Magic: Makes the images round and same size */
+.people-profile img {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow like Pydantic */
+    margin-bottom: 10px;
+    transition: transform 0.2s; /* Cute hover effect */
+}
+
+.people-profile img:hover {
+    transform: scale(1.05);
+}
+
+.people-profile a {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--md-typeset-a-color);
+}
