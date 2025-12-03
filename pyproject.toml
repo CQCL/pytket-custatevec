@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytket-custatevec"
-version = "0.0.1"
+version = "0.1.2"
 description = "Extension for pytket providing access to cuStateVec functionality."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,9 +15,10 @@ authors = [
 ]
 
 dependencies = [
-  "pytket", 
-  "cupy-cuda12x", 
-  "cuquantum-python-cu12>=25.3.0"
+  "pytket",
+  "cupy-cuda12x",
+  "cuquantum-python-cu12>=25.3.0",
+  "plotly>=6.5.0",
 ]
 
 [project.optional-dependencies]

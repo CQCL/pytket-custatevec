@@ -172,7 +172,8 @@ def run_circuit(
         if gate_name[-2:] == "dg":
             adjoint = True
             gate_name = gate_name[:-2]
-        uncontrolled_gate, n_controls = get_uncontrolled_gate(gate_name)
+        gate_name_without_parameter = gate_name.split("(")[0]
+        uncontrolled_gate_without_parameter, n_controls = get_uncontrolled_gate(gate_name_without_parameter)
         # Since control qubits come before target qubits, we split qubits at n_controls.
         controls, targets = qubits[:n_controls], qubits[n_controls:]
 
@@ -189,9 +190,8 @@ def run_circuit(
                 targets=targets,
             )
         else:
-            uncontrolled_gate_name_without_parameter = uncontrolled_gate.split("(")[0]
             matrix = get_gate_matrix(
-                uncontrolled_gate_name_without_parameter,
+                uncontrolled_gate_without_parameter,
                 op.params,
                 matrix_dtype,
             )

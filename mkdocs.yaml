@@ -20,6 +20,7 @@ nav:
   - Installation: installation.md
   - Examples:
       - Overview: examples/index.md
+      - Benchmarks: benchmarks.md
       - Simulation: examples/simulation.md
       - Basis Order: examples/advanced.md
   - API Reference:
@@ -92,17 +93,6 @@ theme:
     - search.share                 # Share button for deep links
 
 # ==============================================================================
-# SOCIAL LINKS
-# ==============================================================================
-social:
-  - icon: fontawesome/brands/github
-    link: https://github.com/CQCL/pytket-custatevec
-  - icon: fontawesome/brands/slack
-    link: https://tketusers.slack.com/
-  - icon: fontawesome/brands/stack-exchange
-    link: https://quantumcomputing.stackexchange.com/tags/pytket
-
-# ==============================================================================
 # PLUGINS
 # ==============================================================================
 plugins:
@@ -164,3 +154,10 @@ extra_css:
 extra:
   version:
     provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CQCL/pytket-custatevec
+    - icon: fontawesome/brands/slack
+      link: https://tketusers.slack.com/
+    - icon: fontawesome/brands/stack-exchange
+      link: https://quantumcomputing.stackexchange.com/tags/pytket

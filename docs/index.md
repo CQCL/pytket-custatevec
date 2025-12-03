@@ -12,7 +12,7 @@ edit_uri: ""
     <h1>pytket-custatevec</h1>
   </div>
 
-  <p class="tagline">The GPU backend for pytket circuit simulation.</p>
+  <p class="tagline">GPU-accelerated statevector and shot-based simulation for pytket.</p>
   
   <div class="hero-actions">
     <a href="installation/" class="btn btn-primary">Get Started</a>

@@ -16,4 +16,10 @@ Explore common usage patterns for `pytket-custatevec`.
 
     [:octicons-arrow-right-24: Read More](advanced.md)
 
+-   :material-speedometer: **Benchmarks**
+    ---
+    View live performance comparisons against CPU simulators (up to $10\times$ speedups).
+
+    [:octicons-arrow-right-24: See Results](../benchmarks.md)
+
 </div>

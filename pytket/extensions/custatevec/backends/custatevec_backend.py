@@ -260,8 +260,6 @@ class CuStateVecStateBackend(_CuStateVecBaseBackend):
             circuits: List of circuits to be submitted.
             n_shots: Number of shots in case of shot-based calculation.
                 This is unused, since this backend does not support shots.
-            seed: Seed for random number generation.
-                This is unused, since this backend does not support shots.
             valid_check: Whether to check for circuit correctness.
 
         Returns:
@@ -373,7 +371,6 @@ class CuStateVecShotsBackend(_CuStateVecBaseBackend):
         Args:
             circuits: List of circuits to be submitted.
             n_shots: Number of shots for shot-based calculation.
-            seed: Seed for random number generation.
             valid_check: Whether to check for circuit correctness.
 
         Returns:

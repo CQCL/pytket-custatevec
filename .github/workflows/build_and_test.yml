@@ -5,11 +5,15 @@ on:
   push:
     branches: [ main ]
     tags: [ "v*", "test-*" ]
+  # Run benchmarks every night at 2am UTC
+  schedule:
+    - cron: '0 2 * * *'
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
 
 jobs:
   # ==========================================================================
   # 1. TEST JOB (Self-Hosted GPU Runner)
-  #    - Respects system packages (CUDA/CuPy) to save bandwidth/time
   # ==========================================================================
   test:
     runs-on: self-hosted
@@ -19,22 +23,19 @@ jobs:
         include:
           - py: "python3.12"
             ver: "3.12"
-          # Uncomment when ready:
-          # - py: "python3.11"
-          #   ver: "3.11"
-          # - py: "python3.10"
-          #   ver: "3.10"
+          - py: "python3.11"
+            ver: "3.11"
+          - py: "python3.10"
+            ver: "3.10"
 
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Install uv (Lightweight, single binary)
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
 
-      # 2. Locate Python (Prefer System, Fallback to Managed)
       - name: Locate ${{ matrix.py }}
         shell: bash
         run: |
@@ -48,33 +49,92 @@ jobs:
             echo "PYTHON_PATH=$(uv python find ${{ matrix.ver }})" >> $GITHUB_ENV
           fi
 
-      # 3. Create Environment & Test
       - name: Install & Test
         shell: bash
         run: |
           set -euo pipefail
+          echo "Using interpreter: $PYTHON_PATH"
           
-          # --system-site-packages allows uv to link against pre-installed CUDA libs
+          # --system-site-packages links against pre-installed CUDA libs
           uv venv --python "$PYTHON_PATH" --system-site-packages .venv
           source .venv/bin/activate
 
           # Install package + test suite
-          # uv will skip downloading heavy wheels if system packages satisfy requirements
           uv pip install ".[test]"
 
           pytest -q
+      
+      - name: Post-Test Cleanup
+        if: always() # Runs even if tests fail
+        run: |
+          echo "🧹 Cleaning up test artifacts..."
+          # Remove the venv to save space (it's recreated every run anyway)
+          rm -rf .venv
+          # Clean uv cache to prevent indefinite growth
+          uv cache prune --ci
 
   # ==========================================================================
-  # 2. DOCS JOB (Standard Runner - No GPU)
-  #    - Builds from scratch on Ubuntu
-  #    - Deploys using standard MkDocs (No Mike/Versioning yet)
+  # 2. BENCHMARK JOB (Self-Hosted GPU Runner)
+  #    - Runs on Push, Schedule, or Manual Trigger
+  # ==========================================================================
+  benchmark:
+    needs: [test]
+    runs-on: self-hosted # Requires GPU
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+
+      - name: Locate Python 3.12
+        shell: bash
+        run: |
+          if command -v python3.12 >/dev/null 2>&1; then
+             echo "PYTHON_PATH=$(command -v python3.12)" >> $GITHUB_ENV
+          else
+             uv python install 3.12
+             echo "PYTHON_PATH=$(uv python find 3.12)" >> $GITHUB_ENV
+          fi
+
+      - name: Run Benchmarks
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv venv --python "$PYTHON_PATH" --system-site-packages .venv
+          source .venv/bin/activate
+          
+          # Install dependencies for the benchmark script
+          uv pip install ".[test]" pandas plotly pytket-qiskit pytket-qulacs kaleido
+
+          # This prevents the Python script from having to do network calls during execution
+          kaleido_get_chrome
+          
+          # Run the script (Generates docs/assets/benchmark_*.html)
+          python benchmarks/benchmark.py
+
+      - name: Upload Benchmark Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-plots
+          path: docs/assets/benchmark_*.html
+          retention-days: 1
+      
+      - name: Post-Benchmark Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up benchmark artifacts..."
+          rm -rf .venv
+          rm -rf docs/assets/benchmark_*.html
+          uv cache prune --ci
+
+  # ==========================================================================
+  # 3. DOCS JOB (Standard Runner)
+  #    - Downloads plots -> Builds Site -> Deploys
   # ==========================================================================
   docs:
     name: Build & Deploy Docs
-    needs: [test]
+    needs: [benchmark]
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required for pushing to gh-pages branch
+      contents: write
     
     steps:
       - uses: actions/checkout@v4
@@ -85,37 +145,46 @@ jobs:
       - name: Set up Python 3.12
         run: uv python install 3.12
 
+      # 📥 RETRIEVE THE BENCHMARK PLOTS
+      - name: Download Benchmark Plots
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-plots
+          path: docs/assets/
+
       - name: Install Docs Dependencies
         run: |
           uv venv
           source .venv/bin/activate
-          # Installs mkdocs, material, mkdocstrings from your 'docs' group
           uv pip install ".[docs]"
 
       - name: Build Docs (Validation)
         run: |
           source .venv/bin/activate
-          # Strict mode (-s) ensures no broken links/warnings
           mkdocs build -s
 
-      - name: Deploy (Main Only)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Deploy (Main Branch / Schedule / Manual)
+        # Deploy if it is a Push to Main, OR a Scheduled run, OR a Manual trigger
+        if: |
+          github.ref == 'refs/heads/main' && 
+          (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: |
           source .venv/bin/activate
           git config user.name ci-bot
           git config user.email ci-bot@quantinuum.com
           
-          # Standard deployment (overwrites previous version)
+          # Standard deployment
           mkdocs gh-deploy --force
 
   # ==========================================================================
-  # 3. PUBLISH JOBS (TestPyPI & PyPI)
+  # 4. PUBLISH JOBS (TestPyPI & PyPI)
   # ==========================================================================
   publish-testpypi:
     if: startsWith(github.ref, 'refs/tags/test-')
     needs: [test]
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -137,6 +206,7 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
