@@ -22,7 +22,6 @@ nav:
       - Overview: examples/index.md
       - Benchmarks: benchmarks.md
       - Simulation: examples/simulation.md
-      - Basis Order: examples/advanced.md
   - API Reference:
       - Overview: api/index.md
       - StateBackend: api/state_backend.md
@@ -40,11 +39,11 @@ theme:
 
   logo: assets/logo.svg  # <--- Points to your new file
   favicon: assets/logo.svg # Use it for the browser tab too!
-  
+
   # Branding Icons
 
   # Color Palette (Tri-State Toggle: Auto / Light / Dark)
-  palette: 
+  palette:
     - media: "(prefers-color-scheme)"
       toggle:
         icon: material/brightness-auto
@@ -79,14 +78,14 @@ theme:
     - navigation.tracking          # Update URL while scrolling
     - navigation.instant           # SPA-like feel (no page reloads)
     - navigation.instant.prefetch  # Load pages on hover for speed
-    
+
     # Content UX
     - toc.follow                   # Table of Contents follows scroll
     - content.code.copy            # Copy-to-clipboard button
     - content.code.annotate        # "Plus" buttons for code comments
     - content.tooltips             # Hover tooltips
     - content.action.edit          # "Edit this page" button
-    
+
     # Search UX (Added these)
     - search.suggest               # Autocomplete search
     - search.highlight             # Highlight search results on page
@@ -113,7 +112,7 @@ markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
-  
+
   # Code highlighting & Nesting
   - pymdownx.highlight:
       anchor_linenums: true
@@ -127,8 +126,8 @@ markdown_extensions:
   # Content organization
   - pymdownx.details
   - pymdownx.tabbed:
-      alternate_style: true 
-  
+      alternate_style: true
+
   # Import code from files (Pro Feature)
   - pymdownx.snippets:
       check_paths: true

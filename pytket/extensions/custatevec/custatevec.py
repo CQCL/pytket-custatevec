@@ -27,6 +27,7 @@ except ImportError as _cuda_import_err:
     raise RuntimeError(INSTALL_CUDA_ERROR_MESSAGE.format(getattr(_cuda_import_err, "name", None))) from _cuda_import_err
 
 import numpy as np
+
 import pytket.pauli
 from pytket.circuit import OpType, Qubit
 from pytket.utils.operators import QubitPauliOperator
@@ -214,7 +215,7 @@ def compute_expectation(
     circuit: Circuit,
     loglevel: int = logging.WARNING,
     logfile: str | None = None,
-) -> float | complex: # Update return type hint
+) -> float | complex:  # Update return type hint
     """Compute the expectation value of a QubitPauliOperator on a CuStateVector."""
     if not isinstance(operator, QubitPauliOperator):
         raise TypeError("operator must be a QubitPauliOperator")
@@ -260,7 +261,4 @@ def compute_expectation(
 
     # Compute the weighted sum of expectation values
     # This dot product will now correctly handle (Complex * Real) -> Complex
-    expectation_value = np.dot(coefficients, expectation_values)
-
-    # Return the full result (likely complex if coefficients were complex)
-    return expectation_value
+    return np.dot(coefficients, expectation_values)

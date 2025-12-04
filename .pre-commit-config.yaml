@@ -6,17 +6,12 @@ repos:
       - id: end-of-file-fixer
       - id: check-toml
       - id: check-yaml
+        args: ["--unsafe"]
       - id: check-added-large-files
       # Python-specific
       - id: check-ast
       - id: check-docstring-first
       - id: debug-statements
-
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.26.0
-    hooks:
-      - id: typos
-        args: []
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.7.0
@@ -35,3 +30,11 @@ repos:
     hooks:
       - id: mypy
         args: ["--explicit-package-bases",  "--ignore-missing-imports"]
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.26.0
+    hooks:
+      - id: typos
+        # Ignore the generated assets folder entirely
+        exclude: ^docs/assets/
+        args: []

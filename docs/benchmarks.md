@@ -4,7 +4,7 @@ The following benchmarks demonstrate the performance of the `pytket-custatevec` 
 
 !!! quote "Comparison Scope"
     These tests compare **`pytket-custatevec`** against **`pytket-qiskit`** and **`pytket-qulacs`**.
-    
+
     All simulations are performed via the abstract `pytket` Backend interface to demonstrate the speedup available to users simply by switching their backend instance.
 
 ## Methodology
@@ -23,11 +23,11 @@ def random_line_circuit(n_qubits: int, layers: int) -> Circuit:
         # 1. Random Single Qubit Rotations
         for q in range(n_qubits):
             c.TK1(np.random.rand(), np.random.rand(), np.random.rand(), q)
-        
+
         # 2. Linear Entanglement (Alternating Even/Odd links)
         offset = np.mod(i, 2)
         qubit_pairs = [[c.qubits[i], c.qubits[i+1]] for i in range(offset, n_qubits-1, 2)]
-        
+
         for pair in qubit_pairs:
             c.CX(pair[0], pair[1])
     return c

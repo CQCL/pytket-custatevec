@@ -50,7 +50,7 @@
 .hero-container p.tagline {
     font-size: 1.3rem;
     color: var(--md-default-fg-color--light);
-    margin: 0 auto 1.5rem auto;   
+    margin: 0 auto 1.5rem auto;
     max-width: 700px;
 }
 
@@ -80,19 +80,19 @@
     padding: 10px 24px;
     border-radius: 6px;
     font-weight: 700;
-    text-decoration: none; 
+    text-decoration: none;
     transition: all 0.2s ease;
 }
 
 /* Primary Button (Teal) */
 .hero-actions a.btn-primary {
-    background-color: var(--md-primary-fg-color); 
-    color: #ffffff !important; 
+    background-color: var(--md-primary-fg-color);
+    color: #ffffff !important;
     border: 2px solid var(--md-primary-fg-color);
 }
 .hero-actions a.btn-primary:hover {
     background-color: var(--md-primary-fg-color--dark);
-    box-shadow: 0 4px 10px rgba(0, 128, 128, 0.4); 
+    box-shadow: 0 4px 10px rgba(0, 128, 128, 0.4);
 }
 
 /* Secondary Button (Outline) */
@@ -109,14 +109,14 @@
    3. HEADER CUSTOMIZATION (Top Left Logo)
    ========================================================================== */
 
-.md-header .md-header__button.md-logo img, 
+.md-header .md-header__button.md-logo img,
 .md-header .md-header__button.md-logo svg {
-    height: 42px; 
-    width: auto;   
+    height: 42px;
+    width: auto;
 }
 
 .md-header .md-header__button.md-logo:hover {
-    opacity: 0.8; 
+    opacity: 0.8;
 }
 
 /* ==========================================================================
@@ -125,18 +125,18 @@
 
 /* Style the Container (The Box) */
 .md-typeset pre {
-    border: 1px solid rgba(128, 128, 128, 0.15); 
+    border: 1px solid rgba(128, 128, 128, 0.15);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     background-color: var(--md-code-bg-color);
-    padding: 0 !important; 
+    padding: 0 !important;
     margin-top: 1em;
     margin-bottom: 1em;
 }
 
 /* Style the Inner Content (The Text) */
 .md-typeset pre > code {
-    padding: 8px 12px !important; 
+    padding: 8px 12px !important;
     font-size: 0.9em;
 }
 
@@ -151,7 +151,7 @@
    ========================================================================== */
 .people-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 20px;
     text-align: center;
     margin: 2em 0;
@@ -168,9 +168,9 @@
     width: 100px;
     height: 100px;
     object-fit: cover;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     margin-bottom: 10px;
-    transition: transform 0.2s; 
+    transition: transform 0.2s;
 }
 
 .people-profile img:hover {
@@ -221,7 +221,7 @@
 }
 
 /* 3. CELL PADDING */
-.md-typeset table td, 
+.md-typeset table td,
 .md-typeset table th {
     padding: 18px 12px !important;
     vertical-align: middle !important;
@@ -230,7 +230,7 @@
 /* 4. MATHJAX SPECIFIC OVERRIDES (The likely culprit) */
 /* This stops MathJax from creating its own internal scrollbox */
 mjx-container {
-    overflow: visible !important; 
+    overflow: visible !important;
 }
 
 /* 5. FORCE TABLE WIDTH */
@@ -248,7 +248,7 @@ mjx-container {
 [data-md-color-scheme="slate"] .hero-container {
     /* Change the gradient: Dark Teal -> Transparent (instead of White) */
     background: linear-gradient(180deg, rgba(0, 128, 128, 0.15) 0%, rgba(0, 0, 0, 0) 100%);
-    
+
     /* Darken the border so it's subtle against the black background */
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -265,15 +265,15 @@ mjx-container {
 /* LIGHT MODE COLORS (ENSURE HIGH CONTRAST) */
 [data-md-color-scheme="default"] {
     /* User Code: Near-White background, Black text (CRISP) */
-    --dia-user-bg: #FAFAFA;      
+    --dia-user-bg: #FAFAFA;
     --dia-user-stroke: #333333;
     --dia-user-text: #000000;
 
     /* Pytket Backend: Very Light Teal, Darker Teal text */
-    --dia-pytket-bg: #E0F7FA; 
+    --dia-pytket-bg: #E0F7FA;
     --dia-pytket-stroke: #00695C;
-    --dia-pytket-text: #004D40; 
-    
+    --dia-pytket-text: #004D40;
+
     /* NVIDIA: Light Green, Dark Green text */
     --dia-nvidia-bg: #F1F8E9;
     --dia-nvidia-stroke: #76B900;
@@ -285,30 +285,30 @@ mjx-container {
     --dia-hw-text: #000000;
 
     /* Edge Labels */
-    --dia-edge-text: #333333; 
-    --dia-edge-bg: #FFFFFF;   
+    --dia-edge-text: #333333;
+    --dia-edge-bg: #FFFFFF;
 }
 
 /* DARK MODE COLORS (keep the previous dark palette) */
 [data-md-color-scheme="slate"] {
     --dia-user-bg: #37474F;
-    --dia-user-stroke: #90A4AE; 
-    --dia-user-text: #FFFFFF;   
+    --dia-user-stroke: #90A4AE;
+    --dia-user-text: #FFFFFF;
 
     --dia-pytket-bg: #004D40;
     --dia-pytket-stroke: #4DB6AC;
-    --dia-pytket-text: #FFFFFF; 
+    --dia-pytket-text: #FFFFFF;
 
-    --dia-nvidia-bg: #558B2F;   
+    --dia-nvidia-bg: #558B2F;
     --dia-nvidia-stroke: #AED581;
-    --dia-nvidia-text: #FFFFFF; 
+    --dia-nvidia-text: #FFFFFF;
 
     --dia-hw-bg: #121212;
     --dia-hw-stroke: #E0E0E0;
-    --dia-hw-text: #FFFFFF;     
+    --dia-hw-text: #FFFFFF;
 
-    --dia-edge-text: #E0E0E0;   
-    --dia-edge-bg: #1e1e1e;     
+    --dia-edge-text: #E0E0E0;
+    --dia-edge-bg: #1e1e1e;
 }
 
 /* ==========================================================================
@@ -324,8 +324,8 @@ mjx-container {
     stroke-width: 2px !important;
 }
 /* Force Text Color (SVG + HTML) */
-.mermaid .node.user text, 
-.mermaid .node.user span, 
+.mermaid .node.user text,
+.mermaid .node.user span,
 .mermaid .node.user .label {
     fill: var(--dia-user-text) !important;   /* SVG text color */
     color: var(--dia-user-text) !important;  /* HTML text color */
@@ -338,8 +338,8 @@ mjx-container {
     stroke: var(--dia-pytket-stroke) !important;
     stroke-width: 2px !important;
 }
-.mermaid .node.pytket text, 
-.mermaid .node.pytket span, 
+.mermaid .node.pytket text,
+.mermaid .node.pytket span,
 .mermaid .node.pytket .label {
     fill: var(--dia-pytket-text) !important;
     color: var(--dia-pytket-text) !important;
@@ -352,8 +352,8 @@ mjx-container {
     stroke: var(--dia-nvidia-stroke) !important;
     stroke-width: 2px !important;
 }
-.mermaid .node.nvidia text, 
-.mermaid .node.nvidia span, 
+.mermaid .node.nvidia text,
+.mermaid .node.nvidia span,
 .mermaid .node.nvidia .label {
     fill: var(--dia-nvidia-text) !important;
     color: var(--dia-nvidia-text) !important;
@@ -367,8 +367,8 @@ mjx-container {
     stroke-width: 3px !important;
     stroke-dasharray: 5 5;
 }
-.mermaid .node.hardware text, 
-.mermaid .node.hardware span, 
+.mermaid .node.hardware text,
+.mermaid .node.hardware span,
 .mermaid .node.hardware .label {
     fill: var(--dia-hw-text) !important;
     color: var(--dia-hw-text) !important;

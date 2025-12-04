@@ -4,7 +4,7 @@
 
 !!! info "Prerequisites"
     Ensure your machine has the **NVIDIA Drivers** installed and working (check with `nvidia-smi`).
-    
+
     You generally do **not** need to install the full CUDA Toolkit system package, as the Python packages below include the necessary runtime libraries.
 
 ## 1. Install Dependencies

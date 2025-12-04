@@ -13,6 +13,32 @@ on:
 
 jobs:
   # ==========================================================================
+  # 0. LINT JOB (Fast checks via pre-commit)
+  # ==========================================================================
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: |
+          # Install 'dev' dependencies (includes pre-commit, ruff, mypy)
+          uv venv
+          uv pip install ".[dev]"
+
+      - name: Run Pre-commit
+        run: |
+          source .venv/bin/activate
+          # This runs ruff, mypy, and all other hooks defined in your .pre-commit-config.yaml
+          pre-commit run --all-files
+
+  # ==========================================================================
   # 1. TEST JOB (Self-Hosted GPU Runner)
   # ==========================================================================
   test:
@@ -21,11 +47,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - py: "python3.12"
+          - py: "python"
             ver: "3.12"
-          - py: "python3.11"
+          - py: "python"
             ver: "3.11"
-          - py: "python3.10"
+          - py: "python"
             ver: "3.10"
 
     steps:
@@ -54,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Using interpreter: $PYTHON_PATH"
-          
+
           # --system-site-packages links against pre-installed CUDA libs
           uv venv --python "$PYTHON_PATH" --system-site-packages .venv
           source .venv/bin/activate
@@ -63,7 +89,7 @@ jobs:
           uv pip install ".[test]"
 
           pytest -q
-      
+
       - name: Post-Test Cleanup
         if: always() # Runs even if tests fail
         run: |
@@ -100,13 +126,13 @@ jobs:
           set -euo pipefail
           uv venv --python "$PYTHON_PATH" --system-site-packages .venv
           source .venv/bin/activate
-          
+
           # Install dependencies for the benchmark script
           uv pip install ".[test]" pandas plotly pytket-qiskit pytket-qulacs kaleido
 
           # This prevents the Python script from having to do network calls during execution
           kaleido_get_chrome
-          
+
           # Run the script (Generates docs/assets/benchmark_*.html)
           python benchmarks/benchmark.py
 
@@ -116,7 +142,7 @@ jobs:
           name: benchmark-plots
           path: docs/assets/benchmark_*.html
           retention-days: 1
-      
+
       - name: Post-Benchmark Cleanup
         if: always()
         run: |
@@ -135,7 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -166,13 +192,13 @@ jobs:
       - name: Deploy (Main Branch / Schedule / Manual)
         # Deploy if it is a Push to Main, OR a Scheduled run, OR a Manual trigger
         if: |
-          github.ref == 'refs/heads/main' && 
+          github.ref == 'refs/heads/main' &&
           (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: |
           source .venv/bin/activate
           git config user.name ci-bot
           git config user.email ci-bot@quantinuum.com
-          
+
           # Standard deployment
           mkdocs gh-deploy --force
 

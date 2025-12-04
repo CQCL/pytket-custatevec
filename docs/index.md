@@ -6,14 +6,14 @@ edit_uri: ""
 ---
 
 <div class="hero-container">
-  
+
   <div class="hero-title-group">
     <img src="assets/logo.svg" alt="Logo" class="hero-logo-small">
     <h1>pytket-custatevec</h1>
   </div>
 
   <p class="tagline">GPU-accelerated statevector and shot-based simulation for pytket.</p>
-  
+
   <div class="hero-actions">
     <a href="installation/" class="btn btn-primary">Get Started</a>
     <a href="examples/" class="btn btn-secondary">View Examples</a>
@@ -25,21 +25,29 @@ edit_uri: ""
   <a href="https://github.com/CQCL/pytket-custatevec/actions">
     <img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat&logo=github" alt="Build">
   </a>
+
   <a href="https://pypi.org/project/pytket-custatevec/">
-    <img src="https://img.shields.io/badge/pypi-v0.0.1-blue?style=flat&logo=pypi" alt="PyPI">
+    <img src="https://img.shields.io/badge/pypi-v0.1.0-blue?style=flat&logo=pypi" alt="PyPI">
   </a>
+
   <a href="https://github.com/CQCL/pytket-custatevec/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=flat" alt="License">
-  </a>`
-  <a href="https://tketusers.slack.com/">
-      <img src="https://img.shields.io/badge/Slack-TKET%20Users-4A154B?logo=slack" alt="Slack">
   </a>
+
+  <a href="https://pepy.tech/project/pytket-custatevec">
+    <img src="https://img.shields.io/badge/downloads-0%2Fmonth-blue" alt="Downloads">
+  </a>
+
+  <a href="https://tketusers.slack.com/">
+      <img src="https://img.shields.io/badge/Slack-TKET%20Users-4A154B?style=flat&logo=slack" alt="Slack">
+  </a>
+
   <a href="https://quantumcomputing.stackexchange.com/questions/tagged/pytket">
-      <img src="https://img.shields.io/badge/StackExchange-pytket-blue?logo=stackexchange" alt="StackExchange">
+      <img src="https://img.shields.io/badge/StackExchange-pytket-2287F4?style=flat&logo=stackexchange" alt="StackExchange">
   </a>
 </div>
 
-`pytket-custatevec` acts as an open-source bridge between Quantinuum's [pytket](https://tket.quantinuum.com/) compiler and NVIDIA's [cuQuantum](https://developer.nvidia.com/cuquantum-sdk) SDK, enabling massive speedups for statevector simulations.
+`pytket-custatevec` acts as an open-source bridge between Quantinuum's [pytket](https://tket.quantinuum.com/) compiler and NVIDIA's [cuQuantum](https://developer.nvidia.com/cuquantum-sdk) SDK, enabling massive speedups for circuit simulations.
 
 ---
 

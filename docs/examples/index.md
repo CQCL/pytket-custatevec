@@ -6,15 +6,10 @@ Explore common usage patterns for `pytket-custatevec`.
 
 -   :material-vector-line: **Basic Simulation**
     ---
-    Learn how to run statevector simulations and shot-based sampling.
+    Learn how to run statevector simulations and shot-based sampling. Calculate expectation values efficiently and handle specific basis ordering.
 
     [:octicons-arrow-right-24: Read More](simulation.md)
 
--   :material-math-integral: **Advanced Usage**
-    ---
-    Calculate expectation values efficiently and handle specific basis ordering.
-
-    [:octicons-arrow-right-24: Read More](advanced.md)
 
 -   :material-speedometer: **Benchmarks**
     ---
